@@ -4,7 +4,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from database import salvar_ideia
 from llm_interface import gerar_resposta
-import re
 
 def registrar_ideia_com_llm(usuario_id: int, titulo: str, descricao: str):
     print(f"Registrando ideia: {titulo}")
