@@ -9,3 +9,5 @@ Use o `pip` para instalar os pacotes listados em `requirements.txt`:
 ```bash
 pip install -r requirements.txt
 ```
+
+Isso instalará também a dependência `requests` utilizada pelo projeto.
