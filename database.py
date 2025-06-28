@@ -1,12 +1,15 @@
 import sqlite3
 from datetime import datetime
+from typing import List, Optional, Tuple
 
 DB_PATH = "hermes.db"
 
-def conectar():
+def conectar() -> sqlite3.Connection:
+    """Abrir conexão com o banco de dados."""
     return sqlite3.connect(DB_PATH)
 
-def inicializar_banco():
+def inicializar_banco() -> None:
+    """Criar tabelas caso não existam."""
     conn = conectar()
     cursor = conn.cursor()
 
@@ -32,14 +35,16 @@ def inicializar_banco():
     conn.commit()
     conn.close()
 
-def criar_usuario(nome, tipo, voz_id=None):
+def criar_usuario(nome: str, tipo: str, voz_id: Optional[str] = None) -> None:
+    """Adicionar um novo usuário."""
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("INSERT INTO usuarios (nome, tipo, voz_id) VALUES (?, ?, ?)", (nome, tipo, voz_id))
     conn.commit()
     conn.close()
 
-def buscar_usuarios():
+def buscar_usuarios() -> List[Tuple[int, str, str]]:
+    """Listar todos os usuários cadastrados."""
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("SELECT id, nome, tipo FROM usuarios")
@@ -47,7 +52,8 @@ def buscar_usuarios():
     conn.close()
     return usuarios
 
-def salvar_ideia(usuario_id, texto):
+def salvar_ideia(usuario_id: int, texto: str) -> None:
+    """Registrar uma nova ideia."""
     data = datetime.now().isoformat()
     conn = conectar()
     cursor = conn.cursor()
@@ -55,7 +61,8 @@ def salvar_ideia(usuario_id, texto):
     conn.commit()
     conn.close()
 
-def listar_ideias(usuario_id):
+def listar_ideias(usuario_id: int) -> List[Tuple[str, str]]:
+    """Retornar ideias de um usuário."""
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("SELECT texto, data FROM ideias WHERE usuario_id = ? ORDER BY data DESC", (usuario_id,))

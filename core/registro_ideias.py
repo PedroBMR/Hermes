@@ -5,7 +5,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from database import salvar_ideia
 from llm_interface import gerar_resposta
 
-def registrar_ideia_com_llm(usuario_id: int, titulo: str, descricao: str):
+def registrar_ideia_com_llm(usuario_id: int, titulo: str, descricao: str) -> None:
+    """Enviar a ideia ao modelo de linguagem e salvá-la."""
     print(f"Registrando ideia: {titulo}")
     print("Enviando ideia ao modelo para sugestões...")
 
