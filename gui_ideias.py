@@ -6,7 +6,8 @@ from PyQt5.QtWidgets import (
 from database import buscar_usuarios, salvar_ideia, listar_ideias
 
 class HermesGUI(QWidget):
-    def __init__(self):
+    def __init__(self) -> None:
+        """Configurar a interface e carregar usuários."""
         super().__init__()
         self.setWindowTitle("Hermes - Registro de Ideias")
         self.setMinimumSize(500, 600)
@@ -44,7 +45,8 @@ class HermesGUI(QWidget):
 
         self.carregar_usuarios()
 
-    def carregar_usuarios(self):
+    def carregar_usuarios(self) -> None:
+        """Preencher a lista de usuários disponíveis."""
         usuarios = buscar_usuarios()
         self.usuarios_map = {}
         for uid, nome, tipo in usuarios:
@@ -54,7 +56,8 @@ class HermesGUI(QWidget):
         if usuarios:
             self.listar_ideias(usuarios[0][0])
 
-    def salvar_ideia(self):
+    def salvar_ideia(self) -> None:
+        """Salvar a ideia atual do formulário."""
         usuario_display = self.user_combo.currentText()
         titulo = self.title_input.text().strip()
         descricao = self.desc_input.toPlainText().strip()
@@ -70,7 +73,8 @@ class HermesGUI(QWidget):
         self.desc_input.clear()
         self.listar_ideias(usuario_id)
 
-    def listar_ideias(self, usuario_id):
+    def listar_ideias(self, usuario_id: int) -> None:
+        """Listar ideias do usuário informado."""
         self.idea_list.clear()
         ideias = listar_ideias(usuario_id)
         for texto, data in ideias:
@@ -78,7 +82,8 @@ class HermesGUI(QWidget):
             item.setData(1000, (data, texto))  # Armazena a ideia completa no item
             self.idea_list.addItem(item)
 
-    def exibir_ideia_completa(self, item):
+    def exibir_ideia_completa(self, item: QListWidgetItem) -> None:
+        """Exibir todo o texto associado à ideia selecionada."""
         data, texto = item.data(1000)
         QMessageBox.information(self, "Ideia Completa", f"📅 {data}\n\n{texto}")
 

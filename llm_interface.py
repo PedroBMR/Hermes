@@ -1,6 +1,7 @@
 import requests
 
 def gerar_resposta(prompt: str) -> str:
+    """Enviar o prompt ao modelo local e retornar a resposta."""
     try:
         response = requests.post(
             "http://localhost:11434/api/generate",

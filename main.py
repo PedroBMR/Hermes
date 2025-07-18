@@ -1,7 +1,8 @@
 from database import inicializar_banco, buscar_usuarios, criar_usuario, salvar_ideia, listar_ideias
 from core.registro_ideias import registrar_ideia_com_llm
 
-def escolher_usuario():
+def escolher_usuario() -> int:
+    """Permitir seleção ou criação de um usuário."""
     usuarios = buscar_usuarios()
     if not usuarios:
         print("Nenhum usuário encontrado. Crie um agora.")
@@ -24,7 +25,8 @@ def escolher_usuario():
         except ValueError:
             print("Digite um número válido.")
 
-def menu_principal(usuario_id, nome_usuario):
+def menu_principal(usuario_id: int, nome_usuario: str) -> bool:
+    """Menu interativo principal."""
     while True:
         print(f"\n=== Hermes (Usuário: {nome_usuario}) ===")
         print("1. Registrar nova ideia")
@@ -53,7 +55,8 @@ def menu_principal(usuario_id, nome_usuario):
         else:
             print("Opção inválida.")
 
-def main():
+def main() -> None:
+    """Executar a aplicação Hermes."""
     inicializar_banco()
     while True:
         usuario_id = escolher_usuario()
