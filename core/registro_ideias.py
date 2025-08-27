@@ -1,9 +1,7 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+"""Registro de ideias utilizando o modelo de linguagem."""
 
-from database import salvar_ideia
-from llm_interface import gerar_resposta
+from ..database import salvar_ideia
+from ..llm_interface import gerar_resposta
 
 def registrar_ideia_com_llm(usuario_id: int, titulo: str, descricao: str):
     print(f"Registrando ideia: {titulo}")

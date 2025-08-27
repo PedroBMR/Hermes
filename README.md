@@ -27,7 +27,7 @@ ollama serve
 O modo em linha de comando inicia o fluxo principal da aplicação:
 
 ```bash
-python main.py
+python -m Hermes.main
 ```
 
 ## Executando a interface gráfica
@@ -35,7 +35,7 @@ python main.py
 Para abrir a interface gráfica (PyQt5):
 
 ```bash
-python gui_ideias.py
+python -m Hermes.gui_ideias
 ```
 
 ## Testes
@@ -44,6 +44,6 @@ Os testes automatizados utilizam o módulo `unittest` padrão do Python.
 Execute todos eles com:
 
 ```bash
-python -m unittest discover -s tests
+python -m unittest discover -s Hermes/tests
 ```
 
