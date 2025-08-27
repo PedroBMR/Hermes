@@ -23,13 +23,17 @@ class TestGerarResposta(unittest.TestCase):
         mock_response.raise_for_status.return_value = None
         mock_post.return_value = mock_response
 
-        result = llm_interface.gerar_resposta("Oi?")
+        result = llm_interface.gerar_resposta(
+            "Oi?", url="http://test", model="fake"
+        )
         self.assertEqual(result, "ok")
 
     @patch('Hermes.llm_interface.requests.post')
     def test_falha_conexao(self, mock_post):
         mock_post.side_effect = llm_interface.requests.exceptions.ConnectionError("falha")
-        result = llm_interface.gerar_resposta("Oi?")
+        result = llm_interface.gerar_resposta(
+            "Oi?", url="http://test", model="fake"
+        )
         self.assertTrue(result.startswith("[FALHA]"))
 
     @patch('Hermes.llm_interface.requests.post')
@@ -39,7 +43,9 @@ class TestGerarResposta(unittest.TestCase):
         mock_response.raise_for_status.return_value = None
         mock_post.return_value = mock_response
 
-        result = llm_interface.gerar_resposta("Oi?")
+        result = llm_interface.gerar_resposta(
+            "Oi?", url="http://test", model="fake"
+        )
         self.assertEqual(result, "[ERRO] Sem resposta do modelo")
 
 

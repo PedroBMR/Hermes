@@ -22,6 +22,23 @@ o [Ollama](https://github.com/jmorganca/ollama) localmente:
 ollama serve
 ```
 
+### Configuração
+
+O endpoint e o modelo utilizados podem ser personalizados pelas variáveis
+de ambiente:
+
+- `LLM_URL` – URL do endpoint de geração (padrão:
+  `http://localhost:11434/api/generate`)
+- `LLM_MODEL` – nome do modelo a ser utilizado (padrão: `mistral`)
+
+Esses valores também podem ser informados diretamente ao chamar a função
+`gerar_resposta`:
+
+```python
+from Hermes.llm_interface import gerar_resposta
+resposta = gerar_resposta("Oi?", url="http://meu-servidor:port/api/generate", model="outro-modelo")
+```
+
 ## Executando o CLI
 
 O modo em linha de comando inicia o fluxo principal da aplicação:
