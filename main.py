@@ -42,9 +42,20 @@ def menu_principal(usuario_id, nome_usuario):
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
-            texto = input("Digite sua ideia: ")
-            salvar_ideia(usuario_id, texto)
-            print("✅ Ideia registrada.")
+            titulo = input("Título da ideia: ")
+            descricao = input("Descrição da ideia: ")
+            try:
+                sugestoes = registrar_ideia_com_llm(usuario_id, titulo, descricao)
+                print("✅ Ideia registrada.")
+                print("Sugestões do modelo:")
+                print(sugestoes)
+            except RuntimeError as e:
+                print(f"⚠️ {e}")
+                if input("Deseja salvar a ideia mesmo assim? (s/N): ").strip().lower() == "s":
+                    salvar_ideia(usuario_id, f"{titulo}\n\n{descricao}")
+                    print("✅ Ideia registrada sem sugestões.")
+                else:
+                    print("❌ Ideia não registrada.")
         elif opcao == "2":
             ideias = listar_ideias(usuario_id)
             if ideias:
