@@ -3,7 +3,13 @@
 from ..database import salvar_ideia
 from ..llm_interface import gerar_resposta
 
-def registrar_ideia_com_llm(usuario_id: int, titulo: str, descricao: str):
+def registrar_ideia_com_llm(
+    usuario_id: int,
+    titulo: str,
+    descricao: str,
+    url: str | None = None,
+    model: str | None = None,
+):
     print(f"Registrando ideia: {titulo}")
     print("Enviando ideia ao modelo para sugestões...")
 
@@ -18,7 +24,7 @@ Tema: <tema>
 Resumo: <resumo>
 """
 
-    resposta = gerar_resposta(prompt)
+    resposta = gerar_resposta(prompt, url=url, model=model)
     print("Resposta do modelo:")
     print(resposta)
 
