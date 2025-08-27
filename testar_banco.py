@@ -1,4 +1,10 @@
-from database import inicializar_banco, criar_usuario, buscar_usuarios, salvar_ideia, listar_ideias
+from .database import (
+    inicializar_banco,
+    criar_usuario,
+    buscar_usuarios,
+    salvar_ideia,
+    listar_ideias,
+)
 
 # Inicializa banco e tabelas
 inicializar_banco()

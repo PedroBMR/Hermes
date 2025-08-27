@@ -12,11 +12,11 @@ if 'requests' not in sys.modules:
     requests_stub.post = lambda *a, **k: None
     sys.modules['requests'] = requests_stub
 
-import llm_interface
+from Hermes import llm_interface
 
 
 class TestGerarResposta(unittest.TestCase):
-    @patch('llm_interface.requests.post')
+    @patch('Hermes.llm_interface.requests.post')
     def test_resposta_sucesso(self, mock_post):
         mock_response = Mock()
         mock_response.json.return_value = {"response": "ok"}
@@ -26,13 +26,13 @@ class TestGerarResposta(unittest.TestCase):
         result = llm_interface.gerar_resposta("Oi?")
         self.assertEqual(result, "ok")
 
-    @patch('llm_interface.requests.post')
+    @patch('Hermes.llm_interface.requests.post')
     def test_falha_conexao(self, mock_post):
         mock_post.side_effect = llm_interface.requests.exceptions.ConnectionError("falha")
         result = llm_interface.gerar_resposta("Oi?")
         self.assertTrue(result.startswith("[FALHA]"))
 
-    @patch('llm_interface.requests.post')
+    @patch('Hermes.llm_interface.requests.post')
     def test_resposta_inesperada(self, mock_post):
         mock_response = Mock()
         mock_response.json.return_value = {"foo": "bar"}

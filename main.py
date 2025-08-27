@@ -1,5 +1,11 @@
-from database import inicializar_banco, buscar_usuarios, criar_usuario, salvar_ideia, listar_ideias
-from core.registro_ideias import registrar_ideia_com_llm
+from .database import (
+    inicializar_banco,
+    buscar_usuarios,
+    criar_usuario,
+    salvar_ideia,
+    listar_ideias,
+)
+from .core.registro_ideias import registrar_ideia_com_llm
 
 def escolher_usuario():
     usuarios = buscar_usuarios()

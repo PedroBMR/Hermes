@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QTextEdit,
     QPushButton, QVBoxLayout, QComboBox, QMessageBox, QListWidget, QListWidgetItem
 )
-from database import buscar_usuarios, salvar_ideia, listar_ideias
+from .database import buscar_usuarios, salvar_ideia, listar_ideias
 
 class HermesGUI(QWidget):
     def __init__(self):

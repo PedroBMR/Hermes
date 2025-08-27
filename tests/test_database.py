@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 
-import database
+from Hermes import database
 
 
 class TestDatabase(unittest.TestCase):
