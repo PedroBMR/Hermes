@@ -1,4 +1,6 @@
-vosk==0.3.45
 PyQt5==5.15.9
-ollama==0.1.0
 requests
+
+# Optional dependencies for future features (not required for basic usage):
+# vosk==0.3.45    # speech recognition
+# ollama==0.1.0   # Python client for local LLM server

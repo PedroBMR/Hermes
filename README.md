@@ -12,6 +12,16 @@ pip install -r requirements.txt
 
 Isso instalará também a dependência `requests` utilizada pelo projeto.
 
+### Dependências opcionais
+
+Algumas funcionalidades futuras podem requerer bibliotecas adicionais que não
+estão incluídas na instalação padrão:
+
+- `vosk` – reconhecimento de fala.
+- `ollama` – cliente Python para o servidor Ollama.
+
+Instale-as manualmente caso deseje experimentar esses recursos.
+
 ## Servidor LLM
 
 Para funcionalidades que usam o modelo de linguagem é necessário que um
