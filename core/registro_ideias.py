@@ -9,7 +9,7 @@ def registrar_ideia_com_llm(
     descricao: str,
     url: str | None = None,
     model: str | None = None,
-):
+) -> str:
     print(f"Registrando ideia: {titulo}")
     print("Enviando ideia ao modelo para sugestões...")
 
@@ -25,10 +25,11 @@ Resumo: <resumo>
 """
 
     resposta = gerar_resposta(prompt, url=url, model=model)
-    print("Resposta do modelo:")
-    print(resposta)
+    if resposta.startswith("[FALHA]"):
+        raise RuntimeError(resposta)
 
     salvar_ideia(usuario_id, f"{titulo}\n\n{descricao}")
+    return resposta
 
 if __name__ == "__main__":
     usuario_id = 1  # Pedro
