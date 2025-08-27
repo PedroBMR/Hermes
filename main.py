@@ -1,3 +1,5 @@
+import sys
+
 from .database import (
     inicializar_banco,
     buscar_usuarios,
@@ -55,7 +57,7 @@ def menu_principal(usuario_id, nome_usuario):
             return True  # trocar de usuário
         elif opcao == "4":
             print("Encerrando Hermes.")
-            exit()
+            return False
         else:
             print("Opção inválida.")
 
@@ -66,6 +68,7 @@ def main():
         nome_usuario = next((u[1] for u in buscar_usuarios() if u[0] == usuario_id), "Desconhecido")
         if not menu_principal(usuario_id, nome_usuario):
             break
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
