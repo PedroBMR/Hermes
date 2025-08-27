@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
     QListWidgetItem,
     QInputDialog,
 )
-from .database import buscar_usuarios, salvar_ideia, listar_ideias, criar_usuario
+from .database import buscar_usuarios, salvar_ideia, listar_ideias as listar_ideias_db, criar_usuario
 
 class HermesGUI(QWidget):
     def __init__(self):
@@ -24,7 +24,6 @@ class HermesGUI(QWidget):
         # Widgets
         self.user_label = QLabel("Usuário:")
         self.user_combo = QComboBox()
-        self.user_combo.currentIndexChanged.connect(self.usuario_alterado)
         self.new_user_button = QPushButton("Novo Usuário")
         self.new_user_button.clicked.connect(self.adicionar_usuario)
 
@@ -57,6 +56,7 @@ class HermesGUI(QWidget):
         self.setLayout(layout)
 
         self.carregar_usuarios()
+        self.user_combo.currentIndexChanged.connect(self.listar_ideias)
 
     def carregar_usuarios(self):
         self.user_combo.clear()
@@ -70,7 +70,7 @@ class HermesGUI(QWidget):
             self.user_combo.blockSignals(True)
             self.user_combo.setCurrentIndex(0)
             self.user_combo.blockSignals(False)
-            self.listar_ideias(usuarios[0][0])
+            self.listar_ideias()
         else:
             self.idea_list.clear()
 
@@ -88,11 +88,14 @@ class HermesGUI(QWidget):
         QMessageBox.information(self, "Sucesso", "Ideia salva com sucesso.")
         self.title_input.clear()
         self.desc_input.clear()
-        self.listar_ideias(usuario_id)
-
-    def listar_ideias(self, usuario_id):
+        self.listar_ideias()
+    def listar_ideias(self):
+        usuario_display = self.user_combo.currentText()
+        usuario_id = self.usuarios_map.get(usuario_display)
         self.idea_list.clear()
-        ideias = listar_ideias(usuario_id)
+        if not usuario_id:
+            return
+        ideias = listar_ideias_db(usuario_id)
         for texto, data in ideias:
             item = QListWidgetItem(f"{data[:10]} - {texto.splitlines()[0]}")
             item.setData(1000, (data, texto))  # Armazena a ideia completa no item
@@ -101,15 +104,6 @@ class HermesGUI(QWidget):
     def exibir_ideia_completa(self, item):
         data, texto = item.data(1000)
         QMessageBox.information(self, "Ideia Completa", f"📅 {data}\n\n{texto}")
-
-    def usuario_alterado(self, index):
-        if index < 0:
-            self.idea_list.clear()
-            return
-        usuario_display = self.user_combo.itemText(index)
-        usuario_id = self.usuarios_map.get(usuario_display)
-        if usuario_id:
-            self.listar_ideias(usuario_id)
 
     def adicionar_usuario(self):
         nome, ok = QInputDialog.getText(self, "Novo Usuário", "Nome do usuário:")
