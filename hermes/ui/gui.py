@@ -1,24 +1,29 @@
 import sys
+
 from PyQt5.QtWidgets import (
     QApplication,
-    QWidget,
+    QComboBox,
+    QInputDialog,
     QLabel,
     QLineEdit,
-    QTextEdit,
-    QPushButton,
-    QVBoxLayout,
-    QComboBox,
-    QMessageBox,
     QListWidget,
     QListWidgetItem,
-    QInputDialog,
+    QMessageBox,
+    QPushButton,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
 )
+
 from ..data.database import (
     buscar_usuarios,
-    salvar_ideia,
-    listar_ideias as listar_ideias_db,
     criar_usuario,
 )
+from ..data.database import listar_ideias as listar_ideias_db
+from ..data.database import (
+    salvar_ideia,
+)
+
 
 class HermesGUI(QWidget):
     def __init__(self):
@@ -94,6 +99,7 @@ class HermesGUI(QWidget):
         self.title_input.clear()
         self.desc_input.clear()
         self.listar_ideias()
+
     def listar_ideias(self):
         usuario_display = self.user_combo.currentText()
         usuario_id = self.usuarios_map.get(usuario_display)
@@ -123,6 +129,7 @@ class HermesGUI(QWidget):
         idx = self.user_combo.findText(display)
         if idx != -1:
             self.user_combo.setCurrentIndex(idx)
+
 
 def main() -> None:
     """Inicia a interface gráfica do Hermes."""

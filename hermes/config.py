@@ -1,14 +1,14 @@
-from __future__ import annotations
-
 """Central configuration for Hermes.
 
 This module exposes a global :data:`config` instance whose values can be
 customised via environment variables or command-line arguments.
 """
 
-from dataclasses import dataclass
-import os
+from __future__ import annotations
+
 import argparse
+import os
+from dataclasses import dataclass
 from typing import Sequence
 
 
