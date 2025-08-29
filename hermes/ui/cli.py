@@ -2,17 +2,18 @@ import logging
 import sys
 
 from ..config import load_from_args
-from ..logging import setup_logging
+from ..core.registro_ideias import registrar_ideia_com_llm
 from ..data.database import (
-    inicializar_banco,
     buscar_usuarios,
     criar_usuario,
-    salvar_ideia,
+    inicializar_banco,
     listar_ideias,
+    salvar_ideia,
 )
-from ..core.registro_ideias import registrar_ideia_com_llm
+from ..logging import setup_logging
 
 logger = logging.getLogger(__name__)
+
 
 def escolher_usuario():
     usuarios = buscar_usuarios()
@@ -37,6 +38,7 @@ def escolher_usuario():
         except ValueError:
             logger.error("Digite um número válido.")
 
+
 def menu_principal(usuario_id, nome_usuario):
     setup_logging()
     while True:
@@ -57,7 +59,10 @@ def menu_principal(usuario_id, nome_usuario):
                 logger.info("%s", sugestoes)
             except RuntimeError as e:
                 logger.error("⚠️ %s", e)
-                if input("Deseja salvar a ideia mesmo assim? (s/N): ").strip().lower() == "s":
+                if (
+                    input("Deseja salvar a ideia mesmo assim? (s/N): ").strip().lower()
+                    == "s"
+                ):
                     salvar_ideia(usuario_id, f"{titulo}\n\n{descricao}")
                     logger.info("✅ Ideia registrada sem sugestões.")
                 else:
@@ -78,16 +83,20 @@ def menu_principal(usuario_id, nome_usuario):
         else:
             logger.error("Opção inválida.")
 
+
 def main(argv: list[str] | None = None):
     setup_logging()
     load_from_args(argv)
     inicializar_banco()
     while True:
         usuario_id = escolher_usuario()
-        nome_usuario = next((u[1] for u in buscar_usuarios() if u[0] == usuario_id), "Desconhecido")
+        nome_usuario = next(
+            (u[1] for u in buscar_usuarios() if u[0] == usuario_id), "Desconhecido"
+        )
         if not menu_principal(usuario_id, nome_usuario):
             break
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

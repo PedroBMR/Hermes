@@ -1,9 +1,9 @@
 from hermes.data.database import (
-    inicializar_banco,
-    criar_usuario,
     buscar_usuarios,
-    salvar_ideia,
+    criar_usuario,
+    inicializar_banco,
     listar_ideias,
+    salvar_ideia,
 )
 
 # Inicializa banco e tabelas
@@ -27,7 +27,9 @@ for uid, nome, tipo in buscar_usuarios():
 # Seleciona o usuário Pedro e salva uma ideia
 usuario_id = next((u[0] for u in buscar_usuarios() if u[1] == "Pedro"), None)
 if usuario_id:
-    salvar_ideia(usuario_id, "Criar uma versão web do Hermes acessível pela rede local.")
+    salvar_ideia(
+        usuario_id, "Criar uma versão web do Hermes acessível pela rede local."
+    )
 
 # Lista ideias do Pedro
 print("\nIdeias do Pedro:")

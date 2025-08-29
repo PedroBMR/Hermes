@@ -7,6 +7,7 @@ from ..services.llm_interface import gerar_resposta
 
 logger = logging.getLogger(__name__)
 
+
 def registrar_ideia_com_llm(
     usuario_id: int,
     titulo: str,
@@ -34,6 +35,7 @@ Resumo: <resumo>
 
     salvar_ideia(usuario_id, f"{titulo}\n\n{descricao}")
     return resposta
+
 
 if __name__ == "__main__":
     usuario_id = 1  # Pedro

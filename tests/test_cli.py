@@ -14,9 +14,13 @@ class TestCLI(unittest.TestCase):
 
     def test_main_exits_cleanly(self):
         inputs = iter(["1", "4"])
-        with patch("hermes.data.database.inicializar_banco"), \
-             patch("hermes.data.database.buscar_usuarios", return_value=[(1, "User", "M")]), \
-             patch("builtins.input", lambda _: next(inputs)):
+        with (
+            patch("hermes.data.database.inicializar_banco"),
+            patch(
+                "hermes.data.database.buscar_usuarios", return_value=[(1, "User", "M")]
+            ),
+            patch("builtins.input", lambda _: next(inputs)),
+        ):
             sys.modules.pop("hermes.ui.cli", None)
             with self.assertRaises(SystemExit) as cm:
                 runpy.run_module("hermes.ui.cli", run_name="__main__")

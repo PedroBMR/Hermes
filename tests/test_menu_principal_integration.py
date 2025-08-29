@@ -8,9 +8,13 @@ from hermes.ui import cli as main
 class TestMenuPrincipalIntegration(unittest.TestCase):
     def test_registra_ideia_fluxo(self):
         inputs = iter(["1", "Titulo", "Descricao", "4"])
-        with patch.object(main, "registrar_ideia_com_llm", return_value="Tema: X\nResumo: Y") as mock_registrar, \
-             patch("builtins.input", lambda _: next(inputs)), \
-             patch("sys.stdout", new_callable=io.StringIO) as fake_out:
+        with (
+            patch.object(
+                main, "registrar_ideia_com_llm", return_value="Tema: X\nResumo: Y"
+            ) as mock_registrar,
+            patch("builtins.input", lambda _: next(inputs)),
+            patch("sys.stdout", new_callable=io.StringIO) as fake_out,
+        ):
             result = main.menu_principal(1, "User")
 
         self.assertFalse(result)
@@ -22,10 +26,14 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
 
     def test_registra_sem_llm_quando_indisponivel(self):
         inputs = iter(["1", "Titulo", "Descricao", "s", "4"])
-        with patch.object(main, "registrar_ideia_com_llm", side_effect=RuntimeError("falha")), \
-             patch.object(main, "salvar_ideia") as mock_salvar, \
-             patch("builtins.input", lambda _: next(inputs)), \
-             patch("sys.stdout", new_callable=io.StringIO) as fake_out:
+        with (
+            patch.object(
+                main, "registrar_ideia_com_llm", side_effect=RuntimeError("falha")
+            ),
+            patch.object(main, "salvar_ideia") as mock_salvar,
+            patch("builtins.input", lambda _: next(inputs)),
+            patch("sys.stdout", new_callable=io.StringIO) as fake_out,
+        ):
             result = main.menu_principal(1, "User")
 
         self.assertFalse(result)
@@ -36,9 +44,11 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
     def test_listar_ideias_fluxo(self):
         inputs = iter(["2", "4"])
         ideias = [("Texto", "2024-01-01")]
-        with patch.object(main, "listar_ideias", return_value=ideias), \
-             patch("builtins.input", lambda _: next(inputs)), \
-             patch("sys.stdout", new_callable=io.StringIO) as fake_out:
+        with (
+            patch.object(main, "listar_ideias", return_value=ideias),
+            patch("builtins.input", lambda _: next(inputs)),
+            patch("sys.stdout", new_callable=io.StringIO) as fake_out,
+        ):
             result = main.menu_principal(1, "User")
 
         self.assertFalse(result)
