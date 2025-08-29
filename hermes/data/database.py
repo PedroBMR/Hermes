@@ -1,7 +1,11 @@
 import sqlite3
 from datetime import datetime
 
-DB_PATH = "hermes.db"
+from ..config import config
+
+# Allow tests to monkeypatch ``DB_PATH`` directly while defaulting to the
+# value provided by :mod:`hermes.config`.
+DB_PATH = config.DB_PATH
 
 def conectar():
     return sqlite3.connect(DB_PATH)

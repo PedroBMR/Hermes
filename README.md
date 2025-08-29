@@ -34,12 +34,20 @@ ollama serve
 
 ### Configuração
 
-O endpoint e o modelo utilizados podem ser personalizados pelas variáveis
-de ambiente:
+Os principais parâmetros da aplicação podem ser ajustados via variáveis de
+ambiente ou argumentos de linha de comando. Valores padrão:
 
-- `LLM_URL` – URL do endpoint de geração (padrão:
-  `http://localhost:11434/api/generate`)
-- `LLM_MODEL` – nome do modelo a ser utilizado (padrão: `mistral`)
+| Parâmetro       | Variável de ambiente     | Argumento CLI     | Padrão                  |
+|-----------------|--------------------------|-------------------|-------------------------|
+| Caminho do banco| `HERMES_DB_PATH`         | `--db-path`       | `hermes.db`             |
+| Porta do servidor LLM | `HERMES_API_PORT`   | `--api-port`      | `11434`                 |
+| Modelo Ollama   | `HERMES_OLLAMA_MODEL`    | `--ollama-model`  | `mistral`               |
+| Timeout (s)     | `HERMES_TIMEOUT`         | `--timeout`       | `30`                    |
+
+O endpoint utilizado para comunicação com o LLM é construído a partir da
+porta (`http://localhost:<porta>/api/generate`). Os argumentos de linha de
+comando podem ser passados ao executar `python -m hermes` ou `python -m
+hermes.ui.cli`.
 
 Esses valores também podem ser informados diretamente ao chamar a função
 `gerar_resposta`:

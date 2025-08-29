@@ -1,5 +1,6 @@
 import sys
 
+from ..config import load_from_args
 from ..data.database import (
     inicializar_banco,
     buscar_usuarios,
@@ -72,7 +73,8 @@ def menu_principal(usuario_id, nome_usuario):
         else:
             print("Opção inválida.")
 
-def main():
+def main(argv: list[str] | None = None):
+    load_from_args(argv)
     inicializar_banco()
     while True:
         usuario_id = escolher_usuario()
