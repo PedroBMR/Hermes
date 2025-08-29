@@ -2,15 +2,19 @@
 
 Assistente pessoal modular, privado e offline com múltiplos usuários, interface visual, entrada por voz/texto e integração com LLM local.
 
-## Instalação das dependências
+## Instalação
 
-Use o `pip` para instalar os pacotes listados em `requirements.txt`:
+Instale o Hermes em modo editável para desenvolver ou executar localmente:
+
+```bash
+pip install -e .
+```
+
+Caso deseje instalar apenas as dependências listadas, utilize `requirements.txt`:
 
 ```bash
 pip install -r requirements.txt
 ```
-
-Isso instalará também a dependência `requests` utilizada pelo projeto.
 
 ### Dependências opcionais
 
@@ -57,16 +61,16 @@ from hermes.services.llm_interface import gerar_resposta
 resposta = gerar_resposta("Oi?", url="http://meu-servidor:port/api/generate", model="outro-modelo")
 ```
 
-## Executando o CLI
+## Execução
 
+### CLI
 O modo em linha de comando inicia o fluxo principal da aplicação:
 
 ```bash
 python -m hermes.ui.cli
 ```
 
-## Executando a interface gráfica
-
+### Interface gráfica
 Para abrir a interface gráfica (PyQt5):
 
 ```bash
@@ -81,4 +85,17 @@ Execute todos eles com:
 ```bash
 python -m unittest discover -s tests
 ```
+
+## Desenvolvimento
+
+Instale e configure os linters com [pre-commit](https://pre-commit.com/):
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+Consulte também [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo de contribuição,
+[CHANGELOG.md](CHANGELOG.md) para o histórico de mudanças e
+[LICENSE](LICENSE) para os termos de licença.
 
