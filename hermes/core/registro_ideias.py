@@ -1,7 +1,11 @@
 """Registro de ideias utilizando o modelo de linguagem."""
 
+import logging
+
 from ..data.database import salvar_ideia
 from ..services.llm_interface import gerar_resposta
+
+logger = logging.getLogger(__name__)
 
 def registrar_ideia_com_llm(
     usuario_id: int,
@@ -10,8 +14,8 @@ def registrar_ideia_com_llm(
     url: str | None = None,
     model: str | None = None,
 ) -> str:
-    print(f"Registrando ideia: {titulo}")
-    print("Enviando ideia ao modelo para sugestões...")
+    logger.info("Registrando ideia: %s", titulo)
+    logger.info("Enviando ideia ao modelo para sugestões...")
 
     prompt = f"""Analise a seguinte ideia:
 Título: {titulo}
