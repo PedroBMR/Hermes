@@ -3,7 +3,7 @@ import sys
 import unittest
 from unittest.mock import patch
 
-from Hermes import main as cli
+from hermes.ui import cli
 
 
 class TestCLI(unittest.TestCase):
@@ -14,12 +14,12 @@ class TestCLI(unittest.TestCase):
 
     def test_main_exits_cleanly(self):
         inputs = iter(["1", "4"])
-        with patch("Hermes.database.inicializar_banco"), \
-             patch("Hermes.database.buscar_usuarios", return_value=[(1, "User", "M")]), \
+        with patch("hermes.data.database.inicializar_banco"), \
+             patch("hermes.data.database.buscar_usuarios", return_value=[(1, "User", "M")]), \
              patch("builtins.input", lambda _: next(inputs)):
-            sys.modules.pop("Hermes.main", None)
+            sys.modules.pop("hermes.ui.cli", None)
             with self.assertRaises(SystemExit) as cm:
-                runpy.run_module("Hermes.main", run_name="__main__")
+                runpy.run_module("hermes.ui.cli", run_name="__main__")
         self.assertEqual(cm.exception.code, 0)
 
 

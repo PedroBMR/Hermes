@@ -1,7 +1,7 @@
 """Registro de ideias utilizando o modelo de linguagem."""
 
-from ..database import salvar_ideia
-from ..llm_interface import gerar_resposta
+from ..data.database import salvar_ideia
+from ..services.llm_interface import gerar_resposta
 
 def registrar_ideia_com_llm(
     usuario_id: int,

@@ -13,7 +13,12 @@ from PyQt5.QtWidgets import (
     QListWidgetItem,
     QInputDialog,
 )
-from .database import buscar_usuarios, salvar_ideia, listar_ideias as listar_ideias_db, criar_usuario
+from ..data.database import (
+    buscar_usuarios,
+    salvar_ideia,
+    listar_ideias as listar_ideias_db,
+    criar_usuario,
+)
 
 class HermesGUI(QWidget):
     def __init__(self):
@@ -119,8 +124,13 @@ class HermesGUI(QWidget):
         if idx != -1:
             self.user_combo.setCurrentIndex(idx)
 
-if __name__ == "__main__":
+def main() -> None:
+    """Inicia a interface gráfica do Hermes."""
     app = QApplication(sys.argv)
     gui = HermesGUI()
     gui.show()
     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()
