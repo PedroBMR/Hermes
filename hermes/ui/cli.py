@@ -1,6 +1,8 @@
+import logging
 import sys
 
 from ..config import load_from_args
+from ..logging import setup_logging
 from ..data.database import (
     inicializar_banco,
     buscar_usuarios,
@@ -10,18 +12,20 @@ from ..data.database import (
 )
 from ..core.registro_ideias import registrar_ideia_com_llm
 
+logger = logging.getLogger(__name__)
+
 def escolher_usuario():
     usuarios = buscar_usuarios()
     if not usuarios:
-        print("Nenhum usuário encontrado. Crie um agora.")
+        logger.info("Nenhum usuário encontrado. Crie um agora.")
         nome = input("Nome do novo usuário: ")
         tipo = input("Tipo (Masculino/Feminino): ")
         criar_usuario(nome, tipo)
         usuarios = buscar_usuarios()
 
-    print("\nUsuários disponíveis:")
+    logger.info("\nUsuários disponíveis:")
     for uid, nome, tipo in usuarios:
-        print(f"{uid} - {nome} ({tipo})")
+        logger.info("%s - %s (%s)", uid, nome, tipo)
 
     while True:
         try:
@@ -29,17 +33,18 @@ def escolher_usuario():
             if any(u[0] == escolha for u in usuarios):
                 return escolha
             else:
-                print("ID inválido.")
+                logger.error("ID inválido.")
         except ValueError:
-            print("Digite um número válido.")
+            logger.error("Digite um número válido.")
 
 def menu_principal(usuario_id, nome_usuario):
+    setup_logging()
     while True:
-        print(f"\n=== Hermes (Usuário: {nome_usuario}) ===")
-        print("1. Registrar nova ideia")
-        print("2. Listar minhas ideias")
-        print("3. Trocar de usuário")
-        print("4. Sair")
+        logger.info("\n=== Hermes (Usuário: %s) ===", nome_usuario)
+        logger.info("1. Registrar nova ideia")
+        logger.info("2. Listar minhas ideias")
+        logger.info("3. Trocar de usuário")
+        logger.info("4. Sair")
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
@@ -47,33 +52,34 @@ def menu_principal(usuario_id, nome_usuario):
             descricao = input("Descrição da ideia: ")
             try:
                 sugestoes = registrar_ideia_com_llm(usuario_id, titulo, descricao)
-                print("✅ Ideia registrada.")
-                print("Sugestões do modelo:")
-                print(sugestoes)
+                logger.info("✅ Ideia registrada.")
+                logger.info("Sugestões do modelo:")
+                logger.info("%s", sugestoes)
             except RuntimeError as e:
-                print(f"⚠️ {e}")
+                logger.error("⚠️ %s", e)
                 if input("Deseja salvar a ideia mesmo assim? (s/N): ").strip().lower() == "s":
                     salvar_ideia(usuario_id, f"{titulo}\n\n{descricao}")
-                    print("✅ Ideia registrada sem sugestões.")
+                    logger.info("✅ Ideia registrada sem sugestões.")
                 else:
-                    print("❌ Ideia não registrada.")
+                    logger.info("❌ Ideia não registrada.")
         elif opcao == "2":
             ideias = listar_ideias(usuario_id)
             if ideias:
-                print("\nMinhas ideias:")
+                logger.info("\nMinhas ideias:")
                 for texto, data in ideias:
-                    print(f"[{data}] {texto}")
+                    logger.info("[%s] %s", data, texto)
             else:
-                print("Nenhuma ideia registrada.")
+                logger.info("Nenhuma ideia registrada.")
         elif opcao == "3":
             return True  # trocar de usuário
         elif opcao == "4":
-            print("Encerrando Hermes.")
+            logger.info("Encerrando Hermes.")
             return False
         else:
-            print("Opção inválida.")
+            logger.error("Opção inválida.")
 
 def main(argv: list[str] | None = None):
+    setup_logging()
     load_from_args(argv)
     inicializar_banco()
     while True:
