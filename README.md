@@ -45,7 +45,7 @@ Esses valores também podem ser informados diretamente ao chamar a função
 `gerar_resposta`:
 
 ```python
-from Hermes.llm_interface import gerar_resposta
+from hermes.services.llm_interface import gerar_resposta
 resposta = gerar_resposta("Oi?", url="http://meu-servidor:port/api/generate", model="outro-modelo")
 ```
 
@@ -54,7 +54,7 @@ resposta = gerar_resposta("Oi?", url="http://meu-servidor:port/api/generate", mo
 O modo em linha de comando inicia o fluxo principal da aplicação:
 
 ```bash
-python -m Hermes.main
+python -m hermes.ui.cli
 ```
 
 ## Executando a interface gráfica
@@ -62,7 +62,7 @@ python -m Hermes.main
 Para abrir a interface gráfica (PyQt5):
 
 ```bash
-python -m Hermes.gui_ideias
+python -m hermes
 ```
 
 ## Testes
@@ -71,6 +71,6 @@ Os testes automatizados utilizam o módulo `unittest` padrão do Python.
 Execute todos eles com:
 
 ```bash
-python -m unittest discover -s Hermes/tests
+python -m unittest discover -s tests
 ```
 

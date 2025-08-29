@@ -1,4 +1,4 @@
-from .database import (
+from hermes.data.database import (
     inicializar_banco,
     criar_usuario,
     buscar_usuarios,

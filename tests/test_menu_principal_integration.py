@@ -2,7 +2,7 @@ import io
 import unittest
 from unittest.mock import patch
 
-from Hermes import main
+from hermes.ui import cli as main
 
 
 class TestMenuPrincipalIntegration(unittest.TestCase):

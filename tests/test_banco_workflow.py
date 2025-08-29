@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 
-from Hermes import database
+from hermes.data import database
 
 
 class TestBancoWorkflow(unittest.TestCase):

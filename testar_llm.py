@@ -1,6 +1,6 @@
 import os
 
-from .llm_interface import gerar_resposta
+from hermes.services.llm_interface import gerar_resposta
 
 pergunta = "Explique brevemente o que é inteligência artificial."
 resposta = gerar_resposta(

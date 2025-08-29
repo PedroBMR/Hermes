@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from Hermes.core.registro_ideias import registrar_ideia_com_llm
+from hermes.core.registro_ideias import registrar_ideia_com_llm
 
 
 class TestRegistrarIdeiaComLLM(unittest.TestCase):
@@ -12,8 +12,8 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
         url = "http://mock"
         model = "fake-model"
 
-        with patch("Hermes.core.registro_ideias.gerar_resposta", return_value="Tema: X\nResumo: Y") as mock_llm, \
-             patch("Hermes.core.registro_ideias.salvar_ideia") as mock_salvar, \
+        with patch("hermes.core.registro_ideias.gerar_resposta", return_value="Tema: X\nResumo: Y") as mock_llm, \
+             patch("hermes.core.registro_ideias.salvar_ideia") as mock_salvar, \
              patch("builtins.print"):
             resposta = registrar_ideia_com_llm(usuario_id, titulo, descricao, url=url, model=model)
 
@@ -32,8 +32,8 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
         titulo = "Titulo"
         descricao = "Descricao"
 
-        with patch("Hermes.core.registro_ideias.gerar_resposta", return_value="[FALHA] erro") as mock_llm, \
-             patch("Hermes.core.registro_ideias.salvar_ideia") as mock_salvar, \
+        with patch("hermes.core.registro_ideias.gerar_resposta", return_value="[FALHA] erro") as mock_llm, \
+             patch("hermes.core.registro_ideias.salvar_ideia") as mock_salvar, \
              patch("builtins.print"):
             with self.assertRaises(RuntimeError):
                 registrar_ideia_com_llm(usuario_id, titulo, descricao)
