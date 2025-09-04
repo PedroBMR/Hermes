@@ -1,8 +1,15 @@
 """Interface de comunicação com o modelo de linguagem."""
 
+import logging
+from json import JSONDecodeError
+from typing import Any, Dict
+
 import requests
 
 from ..config import config
+
+
+logger = logging.getLogger(__name__)
 
 
 def gerar_resposta(
@@ -10,7 +17,7 @@ def gerar_resposta(
     url: str | None = None,
     model: str | None = None,
     timeout: int | None = None,
-) -> str:
+) -> Dict[str, Any]:
     """Envia um *prompt* ao servidor LLM e retorna a resposta.
 
     Parameters
@@ -40,6 +47,25 @@ def gerar_resposta(
         )
         response.raise_for_status()
         dados = response.json()
-        return dados.get("response", "[ERRO] Sem resposta do modelo").strip()
-    except Exception as e:
-        return f"[FALHA] {str(e)}"
+        resposta = dados.get("response")
+        if resposta is None:
+            return {
+                "ok": False,
+                "error": "missing_response",
+                "message": "Sem resposta do modelo",
+            }
+        return {"ok": True, "response": resposta.strip()}
+    except requests.exceptions.RequestException as exc:
+        logger.exception("Erro ao comunicar com o servidor LLM: %s", exc)
+        return {
+            "ok": False,
+            "error": exc.__class__.__name__,
+            "message": str(exc),
+        }
+    except JSONDecodeError as exc:
+        logger.exception("Resposta inválida do servidor LLM: %s", exc)
+        return {
+            "ok": False,
+            "error": "JSONDecodeError",
+            "message": str(exc),
+        }

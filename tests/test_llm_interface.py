@@ -26,7 +26,8 @@ class TestGerarResposta(unittest.TestCase):
         mock_post.return_value = mock_response
 
         result = llm_interface.gerar_resposta("Oi?", url="http://test", model="fake")
-        self.assertEqual(result, "ok")
+        self.assertTrue(result["ok"])  # type: ignore[index]
+        self.assertEqual(result["response"], "ok")
 
     @patch("hermes.services.llm_interface.requests.post")
     def test_falha_conexao(self, mock_post):
@@ -34,7 +35,8 @@ class TestGerarResposta(unittest.TestCase):
             "falha"
         )
         result = llm_interface.gerar_resposta("Oi?", url="http://test", model="fake")
-        self.assertTrue(result.startswith("[FALHA]"))
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"], "ConnectionError")
 
     @patch("hermes.services.llm_interface.requests.post")
     def test_resposta_inesperada(self, mock_post):
@@ -44,7 +46,8 @@ class TestGerarResposta(unittest.TestCase):
         mock_post.return_value = mock_response
 
         result = llm_interface.gerar_resposta("Oi?", url="http://test", model="fake")
-        self.assertEqual(result, "[ERRO] Sem resposta do modelo")
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"], "missing_response")
 
 
 if __name__ == "__main__":
