@@ -7,6 +7,7 @@ from ..config import config
 # value provided by :mod:`hermes.config`.
 DB_PATH = config.DB_PATH
 
+
 def inicializar_banco():
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
@@ -34,6 +35,7 @@ def inicializar_banco():
             """
         )
 
+
 def criar_usuario(nome, tipo, voz_id=None):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
@@ -42,11 +44,13 @@ def criar_usuario(nome, tipo, voz_id=None):
             (nome, tipo, voz_id),
         )
 
+
 def buscar_usuarios():
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id, nome, tipo FROM usuarios")
         return cursor.fetchall()
+
 
 def salvar_ideia(usuario_id, texto):
     data = datetime.now().isoformat()
@@ -56,6 +60,7 @@ def salvar_ideia(usuario_id, texto):
             "INSERT INTO ideias (usuario_id, texto, data) VALUES (?, ?, ?)",
             (usuario_id, texto, data),
         )
+
 
 def listar_ideias(usuario_id):
     with sqlite3.connect(DB_PATH) as conn:
