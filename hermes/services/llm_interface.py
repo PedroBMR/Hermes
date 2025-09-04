@@ -8,7 +8,6 @@ import requests
 
 from ..config import config
 
-
 logger = logging.getLogger(__name__)
 
 
