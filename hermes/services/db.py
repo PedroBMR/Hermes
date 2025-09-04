@@ -33,6 +33,68 @@ def _dicts(cursor: sqlite3.Cursor, rows: Iterable[sqlite3.Row]) -> list[dict]:
     return [dict(row) for row in rows]
 
 
+def init_db() -> None:
+    """Create database tables if they do not exist and run migrations."""
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                tipo TEXT NOT NULL,
+                voz_id TEXT
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS ideias (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                body TEXT NOT NULL,
+                source TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                llm_summary TEXT,
+                llm_topic TEXT,
+                tags TEXT,
+                FOREIGN KEY(user_id) REFERENCES usuarios(id)
+            )
+            """
+        )
+
+    # Run migrations after ensuring base schema is present
+    from ..data.migrate import migrate_to_v2
+
+    migrate_to_v2(DB_PATH)
+
+
+def add_user(name: str, kind: str, voice_id: str | None = None) -> int:
+    """Insert a new user and return its ``id``."""
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO usuarios (nome, tipo, voz_id) VALUES (?, ?, ?)",
+            (name, kind, voice_id),
+        )
+        return int(cursor.lastrowid)
+
+
+def list_users() -> list[dict]:
+    """Return all users as a list of dictionaries."""
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, nome as name, tipo as kind, voz_id as voice_id FROM usuarios"
+        )
+        return _dicts(cursor, cursor.fetchall())
+
+
 def add_idea(
     user_id: int,
     title: str,

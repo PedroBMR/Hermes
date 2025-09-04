@@ -3,30 +3,29 @@ import sys
 
 from ..config import load_from_args
 from ..core.registro_ideias import registrar_ideia_com_llm
-from ..data.database import buscar_usuarios, criar_usuario, inicializar_banco
 from ..logging import setup_logging
-from ..services.db import add_idea, list_ideas
+from ..services.db import add_idea, add_user, init_db, list_ideas, list_users
 
 logger = logging.getLogger(__name__)
 
 
 def escolher_usuario():
-    usuarios = buscar_usuarios()
+    usuarios = list_users()
     if not usuarios:
         logger.info("Nenhum usuário encontrado. Crie um agora.")
         nome = input("Nome do novo usuário: ")
         tipo = input("Tipo (Masculino/Feminino): ")
-        criar_usuario(nome, tipo)
-        usuarios = buscar_usuarios()
+        add_user(nome, tipo)
+        usuarios = list_users()
 
     logger.info("\nUsuários disponíveis:")
-    for uid, nome, tipo in usuarios:
-        logger.info("%s - %s (%s)", uid, nome, tipo)
+    for usuario in usuarios:
+        logger.info("%s - %s (%s)", usuario["id"], usuario["name"], usuario["kind"])
 
     while True:
         try:
             escolha = int(input("Escolha um usuário pelo ID: "))
-            if any(u[0] == escolha for u in usuarios):
+            if any(u["id"] == escolha for u in usuarios):
                 return escolha
             else:
                 logger.error("ID inválido.")
@@ -86,11 +85,12 @@ def menu_principal(usuario_id, nome_usuario):
 def main(argv: list[str] | None = None):
     setup_logging()
     load_from_args(argv)
-    inicializar_banco()
+    init_db()
     while True:
         usuario_id = escolher_usuario()
         nome_usuario = next(
-            (u[1] for u in buscar_usuarios() if u[0] == usuario_id), "Desconhecido"
+            (u["name"] for u in list_users() if u["id"] == usuario_id),
+            "Desconhecido",
         )
         if not menu_principal(usuario_id, nome_usuario):
             break

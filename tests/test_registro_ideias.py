@@ -15,7 +15,10 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
         with (
             patch(
                 "hermes.core.registro_ideias.gerar_resposta",
-                return_value={"ok": True, "response": "Tema: X\nResumo: Y"},
+                return_value={
+                    "ok": True,
+                    "response": "Tema: X\nResumo: Y\nTags: a,b",
+                },
             ) as mock_llm,
             patch("hermes.core.registro_ideias.add_idea") as mock_add,
             patch("builtins.print"),
@@ -38,8 +41,9 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
             source=url,
             llm_summary="Y",
             llm_topic="X",
+            tags="a,b",
         )
-        self.assertEqual(resposta, "Tema: X\nResumo: Y")
+        self.assertEqual(resposta, "Tema: X\nResumo: Y\nTags: a,b")
 
     def test_falha_llm_gera_excecao(self):
         usuario_id = 1

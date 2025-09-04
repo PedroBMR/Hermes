@@ -15,9 +15,10 @@ class TestCLI(unittest.TestCase):
     def test_main_exits_cleanly(self):
         inputs = iter(["1", "4"])
         with (
-            patch("hermes.data.database.inicializar_banco"),
+            patch("hermes.services.db.init_db"),
             patch(
-                "hermes.data.database.buscar_usuarios", return_value=[(1, "User", "M")]
+                "hermes.services.db.list_users",
+                return_value=[{"id": 1, "name": "User", "kind": "M"}],
             ),
             patch("builtins.input", lambda _: next(inputs)),
         ):
