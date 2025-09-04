@@ -1,6 +1,7 @@
 import sqlite3
 
 from ..config import config
+from .migrate import migrate_to_v2
 
 # Allow tests to monkeypatch ``DB_PATH`` directly while defaulting to the
 # value provided by :mod:`hermes.config`.
@@ -37,6 +38,8 @@ def inicializar_banco():
             )
             """
         )
+
+    migrate_to_v2(DB_PATH)
 
 def criar_usuario(nome, tipo, voz_id=None):
     with sqlite3.connect(DB_PATH) as conn:
