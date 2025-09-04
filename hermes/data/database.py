@@ -1,5 +1,4 @@
 import sqlite3
-from datetime import datetime
 
 from ..config import config
 
@@ -26,10 +25,15 @@ def inicializar_banco():
             """
             CREATE TABLE IF NOT EXISTS ideias (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario_id INTEGER NOT NULL,
-                texto TEXT NOT NULL,
-                data TEXT NOT NULL,
-                FOREIGN KEY(usuario_id) REFERENCES usuarios(id)
+                user_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                body TEXT NOT NULL,
+                source TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                llm_summary TEXT,
+                llm_topic TEXT,
+                tags TEXT,
+                FOREIGN KEY(user_id) REFERENCES usuarios(id)
             )
             """
         )
@@ -48,20 +52,42 @@ def buscar_usuarios():
         cursor.execute("SELECT id, nome, tipo FROM usuarios")
         return cursor.fetchall()
 
-def salvar_ideia(usuario_id, texto):
-    data = datetime.now().isoformat()
+def salvar_ideia(
+    user_id,
+    title,
+    body,
+    source=None,
+    llm_summary=None,
+    llm_topic=None,
+    tags=None,
+):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO ideias (usuario_id, texto, data) VALUES (?, ?, ?)",
-            (usuario_id, texto, data),
+            """
+            INSERT INTO ideias (
+                user_id,
+                title,
+                body,
+                source,
+                llm_summary,
+                llm_topic,
+                tags
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (user_id, title, body, source, llm_summary, llm_topic, tags),
         )
 
-def listar_ideias(usuario_id):
+def listar_ideias(user_id):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT texto, data FROM ideias WHERE usuario_id = ? ORDER BY data DESC",
-            (usuario_id,),
+            """
+            SELECT title, body, created_at
+            FROM ideias
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            """,
+            (user_id,),
         )
         return cursor.fetchall()

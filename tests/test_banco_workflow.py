@@ -32,10 +32,11 @@ class TestBancoWorkflow(unittest.TestCase):
         self.assertIn("Isabella", nomes)
 
         pedro_id = next(u[0] for u in usuarios if u[1] == "Pedro")
-        database.salvar_ideia(pedro_id, "Criar versao web")
+        database.salvar_ideia(pedro_id, "Criar versao web", "Detalhes")
         ideias = database.listar_ideias(pedro_id)
         self.assertEqual(len(ideias), 1)
         self.assertEqual(ideias[0][0], "Criar versao web")
+        self.assertEqual(ideias[0][1], "Detalhes")
 
 
 if __name__ == "__main__":

@@ -31,7 +31,14 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
         self.assertEqual(mock_llm.call_args.kwargs["url"], url)
         self.assertEqual(mock_llm.call_args.kwargs["model"], model)
 
-        mock_salvar.assert_called_once_with(usuario_id, f"{titulo}\n\n{descricao}")
+        mock_salvar.assert_called_once_with(
+            usuario_id,
+            titulo,
+            descricao,
+            source=url,
+            llm_summary="Y",
+            llm_topic="X",
+        )
         self.assertEqual(resposta, "Tema: X\nResumo: Y")
 
     def test_falha_llm_gera_excecao(self):

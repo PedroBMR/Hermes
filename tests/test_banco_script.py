@@ -30,11 +30,12 @@ class TestarBanco(unittest.TestCase):
 
         usuario_id = next(uid for uid, nome, _ in usuarios if nome == "Pedro")
         texto_ideia = "Criar uma versão web do Hermes acessível pela rede local."
-        database.salvar_ideia(usuario_id, texto_ideia)
+        database.salvar_ideia(usuario_id, "Versao web", texto_ideia)
 
         ideias = database.listar_ideias(usuario_id)
         assert len(ideias) == 1
-        assert ideias[0][0] == texto_ideia
+        assert ideias[0][0] == "Versao web"
+        assert ideias[0][1] == texto_ideia
 
 
 if __name__ == "__main__":
