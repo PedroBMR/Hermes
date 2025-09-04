@@ -15,6 +15,7 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
             patch("builtins.input", lambda _: next(inputs)),
             patch("sys.stdout", new_callable=io.StringIO) as fake_out,
         ):
+            main.setup_logging()
             result = main.menu_principal(1, "User")
 
         self.assertFalse(result)
@@ -34,6 +35,7 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
             patch("builtins.input", lambda _: next(inputs)),
             patch("sys.stdout", new_callable=io.StringIO) as fake_out,
         ):
+            main.setup_logging()
             result = main.menu_principal(1, "User")
 
         self.assertFalse(result)
@@ -49,6 +51,7 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
             patch("builtins.input", lambda _: next(inputs)),
             patch("sys.stdout", new_callable=io.StringIO) as fake_out,
         ):
+            main.setup_logging()
             result = main.menu_principal(1, "User")
 
         self.assertFalse(result)

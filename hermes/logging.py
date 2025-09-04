@@ -11,6 +11,10 @@ def setup_logging() -> None:
     """Configure application logging."""
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
+
+    # Close any existing handlers before reconfiguring
+    for handler in root_logger.handlers:
+        handler.close()
     root_logger.handlers.clear()
 
     LOG_DIR.mkdir(parents=True, exist_ok=True)
