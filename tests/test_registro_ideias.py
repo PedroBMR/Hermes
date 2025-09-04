@@ -15,7 +15,7 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
         with (
             patch(
                 "hermes.core.registro_ideias.gerar_resposta",
-                return_value="Tema: X\nResumo: Y",
+                return_value={"ok": True, "response": "Tema: X\nResumo: Y"},
             ) as mock_llm,
             patch("hermes.core.registro_ideias.salvar_ideia") as mock_salvar,
             patch("builtins.print"),
@@ -42,7 +42,7 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
         with (
             patch(
                 "hermes.core.registro_ideias.gerar_resposta",
-                return_value="[FALHA] erro",
+                return_value={"ok": False, "message": "erro"},
             ) as mock_llm,
             patch("hermes.core.registro_ideias.salvar_ideia") as mock_salvar,
             patch("builtins.print"),

@@ -9,4 +9,7 @@ resposta = gerar_resposta(
     model=os.getenv("LLM_MODEL"),
 )
 print("Resposta do modelo:")
-print(resposta)
+if resposta.get("ok"):
+    print(resposta["response"])
+else:
+    print("Falha:", resposta.get("message"))

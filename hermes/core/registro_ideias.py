@@ -29,12 +29,12 @@ Tema: <tema>
 Resumo: <resumo>
 """
 
-    resposta = gerar_resposta(prompt, url=url, model=model)
-    if resposta.startswith("[FALHA]"):
-        raise RuntimeError(resposta)
+    resultado = gerar_resposta(prompt, url=url, model=model)
+    if not resultado.get("ok", False):
+        raise RuntimeError(resultado.get("message", "Erro desconhecido"))
 
     salvar_ideia(usuario_id, f"{titulo}\n\n{descricao}")
-    return resposta
+    return resultado["response"]
 
 
 if __name__ == "__main__":
