@@ -1,15 +1,7 @@
-import sys
-import types
 import unittest
 from unittest.mock import Mock, patch
 
-if "requests" not in sys.modules:
-    requests_stub = types.ModuleType("requests")
-    class ConnError(Exception):
-        pass
-    requests_stub.exceptions = types.SimpleNamespace(ConnectionError=ConnError)
-    requests_stub.post = lambda *a, **k: None
-    sys.modules["requests"] = requests_stub
+import tests.requests_stub  # noqa: F401
 
 from hermes.services.llm_interface import gerar_resposta
 
