@@ -19,9 +19,7 @@ from ..core.registro_ideias import registrar_ideia_com_llm
 from ..data.database import (
     buscar_usuarios,
     criar_usuario,
-)
-from ..data.database import listar_ideias as listar_ideias_db
-from ..data.database import (
+    listar_ideias as listar_ideias_db,
     salvar_ideia,
 )
 
