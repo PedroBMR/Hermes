@@ -16,12 +16,8 @@ from PyQt5.QtWidgets import (
 )
 
 from ..core.registro_ideias import registrar_ideia_com_llm
-from ..data.database import (
-    buscar_usuarios,
-    criar_usuario,
-    listar_ideias as listar_ideias_db,
-    salvar_ideia,
-)
+from ..data.database import buscar_usuarios, criar_usuario
+from ..services.db import add_idea, list_ideas
 
 
 class HermesGUI(QWidget):
@@ -108,7 +104,7 @@ class HermesGUI(QWidget):
                 QMessageBox.Yes | QMessageBox.No,
             )
             if opcao == QMessageBox.Yes:
-                salvar_ideia(usuario_id, titulo, descricao)
+                add_idea(usuario_id, titulo, descricao)
                 QMessageBox.information(self, "Sucesso", "Ideia salva sem sugestões.")
             else:
                 return
@@ -122,8 +118,11 @@ class HermesGUI(QWidget):
         self.idea_list.clear()
         if not usuario_id:
             return
-        ideias = listar_ideias_db(usuario_id)
-        for titulo, corpo, data in ideias:
+        ideias = list_ideas(usuario_id)
+        for ideia in ideias:
+            data = ideia["created_at"]
+            titulo = ideia["title"]
+            corpo = ideia["body"]
             item = QListWidgetItem(f"{data[:10]} - {titulo}")
             item.setData(1000, (data, titulo, corpo))  # Armazena a ideia completa
             self.idea_list.addItem(item)

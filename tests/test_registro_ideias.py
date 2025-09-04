@@ -17,7 +17,7 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
                 "hermes.core.registro_ideias.gerar_resposta",
                 return_value={"ok": True, "response": "Tema: X\nResumo: Y"},
             ) as mock_llm,
-            patch("hermes.core.registro_ideias.salvar_ideia") as mock_salvar,
+            patch("hermes.core.registro_ideias.add_idea") as mock_add,
             patch("builtins.print"),
         ):
             resposta = registrar_ideia_com_llm(
@@ -31,7 +31,7 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
         self.assertEqual(mock_llm.call_args.kwargs["url"], url)
         self.assertEqual(mock_llm.call_args.kwargs["model"], model)
 
-        mock_salvar.assert_called_once_with(
+        mock_add.assert_called_once_with(
             usuario_id,
             titulo,
             descricao,
@@ -51,14 +51,14 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
                 "hermes.core.registro_ideias.gerar_resposta",
                 return_value={"ok": False, "message": "erro"},
             ) as mock_llm,
-            patch("hermes.core.registro_ideias.salvar_ideia") as mock_salvar,
+            patch("hermes.core.registro_ideias.add_idea") as mock_add,
             patch("builtins.print"),
         ):
             with self.assertRaises(RuntimeError):
                 registrar_ideia_com_llm(usuario_id, titulo, descricao)
 
         mock_llm.assert_called_once()
-        mock_salvar.assert_not_called()
+        mock_add.assert_not_called()
 
 
 if __name__ == "__main__":

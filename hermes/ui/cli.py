@@ -3,14 +3,9 @@ import sys
 
 from ..config import load_from_args
 from ..core.registro_ideias import registrar_ideia_com_llm
-from ..data.database import (
-    buscar_usuarios,
-    criar_usuario,
-    inicializar_banco,
-    listar_ideias,
-    salvar_ideia,
-)
+from ..data.database import buscar_usuarios, criar_usuario, inicializar_banco
 from ..logging import setup_logging
+from ..services.db import add_idea, list_ideas
 
 logger = logging.getLogger(__name__)
 
@@ -62,16 +57,21 @@ def menu_principal(usuario_id, nome_usuario):
                     input("Deseja salvar a ideia mesmo assim? (s/N): ").strip().lower()
                     == "s"
                 ):
-                    salvar_ideia(usuario_id, titulo, descricao)
+                    add_idea(usuario_id, titulo, descricao)
                     logger.info("✅ Ideia registrada sem sugestões.")
                 else:
                     logger.info("❌ Ideia não registrada.")
         elif opcao == "2":
-            ideias = listar_ideias(usuario_id)
+            ideias = list_ideas(usuario_id)
             if ideias:
                 logger.info("\nMinhas ideias:")
-                for titulo, corpo, data in ideias:
-                    logger.info("[%s] %s - %s", data, titulo, corpo)
+                for ideia in ideias:
+                    logger.info(
+                        "[%s] %s - %s",
+                        ideia["created_at"],
+                        ideia["title"],
+                        ideia["body"],
+                    )
             else:
                 logger.info("Nenhuma ideia registrada.")
         elif opcao == "3":

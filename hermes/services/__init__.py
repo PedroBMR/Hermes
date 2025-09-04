@@ -1,3 +1,5 @@
 """External service integrations for Hermes."""
 
-__all__ = ["llm_interface"]
+from . import db, llm_interface
+
+__all__ = ["llm_interface", "db"]

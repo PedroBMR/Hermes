@@ -2,7 +2,7 @@
 
 import logging
 
-from ..data.database import salvar_ideia
+from ..services.db import add_idea
 from ..services.llm_interface import gerar_resposta
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ Resumo: <resumo>
         elif linha.lower().startswith("resumo:"):
             resumo = linha.split(":", 1)[1].strip()
 
-    salvar_ideia(
+    add_idea(
         usuario_id,
         titulo,
         descricao,
