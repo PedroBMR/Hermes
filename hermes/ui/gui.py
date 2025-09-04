@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
+from ..core.registro_ideias import registrar_ideia_com_llm
 from ..data.database import (
     buscar_usuarios,
     criar_usuario,
@@ -94,8 +95,25 @@ class HermesGUI(QWidget):
             return
 
         usuario_id = self.usuarios_map.get(usuario_display)
-        salvar_ideia(usuario_id, f"{titulo}\n\n{descricao}")
-        QMessageBox.information(self, "Sucesso", "Ideia salva com sucesso.")
+        try:
+            sugestoes = registrar_ideia_com_llm(usuario_id, titulo, descricao)
+            QMessageBox.information(
+                self,
+                "Sucesso",
+                f"Ideia salva com sucesso.\n\nSugestões do modelo:\n{sugestoes}",
+            )
+        except RuntimeError as e:
+            opcao = QMessageBox.question(
+                self,
+                "Erro",
+                f"{e}\n\nDeseja salvar a ideia mesmo assim?",
+                QMessageBox.Yes | QMessageBox.No,
+            )
+            if opcao == QMessageBox.Yes:
+                salvar_ideia(usuario_id, f"{titulo}\n\n{descricao}")
+                QMessageBox.information(self, "Sucesso", "Ideia salva sem sugestões.")
+            else:
+                return
         self.title_input.clear()
         self.desc_input.clear()
         self.listar_ideias()
