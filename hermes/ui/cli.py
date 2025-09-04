@@ -40,7 +40,6 @@ def escolher_usuario():
 
 
 def menu_principal(usuario_id, nome_usuario):
-    setup_logging()
     while True:
         logger.info("\n=== Hermes (Usuário: %s) ===", nome_usuario)
         logger.info("1. Registrar nova ideia")
