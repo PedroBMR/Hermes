@@ -33,8 +33,24 @@ Resumo: <resumo>
     if not resultado.get("ok", False):
         raise RuntimeError(resultado.get("message", "Erro desconhecido"))
 
-    salvar_ideia(usuario_id, f"{titulo}\n\n{descricao}")
-    return resultado["response"]
+    resposta = resultado["response"]
+    tema = None
+    resumo = None
+    for linha in resposta.splitlines():
+        if linha.lower().startswith("tema:"):
+            tema = linha.split(":", 1)[1].strip()
+        elif linha.lower().startswith("resumo:"):
+            resumo = linha.split(":", 1)[1].strip()
+
+    salvar_ideia(
+        usuario_id,
+        titulo,
+        descricao,
+        source=url,
+        llm_summary=resumo,
+        llm_topic=tema,
+    )
+    return resposta
 
 
 if __name__ == "__main__":

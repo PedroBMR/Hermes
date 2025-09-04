@@ -39,13 +39,13 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
             result = main.menu_principal(1, "User")
 
         self.assertFalse(result)
-        mock_salvar.assert_called_once_with(1, "Titulo\n\nDescricao")
+        mock_salvar.assert_called_once_with(1, "Titulo", "Descricao")
         saida = fake_out.getvalue()
         self.assertIn("Ideia registrada sem sugestões", saida)
 
     def test_listar_ideias_fluxo(self):
         inputs = iter(["2", "4"])
-        ideias = [("Texto", "2024-01-01")]
+        ideias = [("Titulo", "Texto", "2024-01-01")]
         with (
             patch.object(main, "listar_ideias", return_value=ideias),
             patch("builtins.input", lambda _: next(inputs)),
@@ -57,7 +57,7 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
         self.assertFalse(result)
         saida = fake_out.getvalue()
         self.assertIn("Minhas ideias", saida)
-        self.assertIn("[2024-01-01] Texto", saida)
+        self.assertIn("[2024-01-01] Titulo - Texto", saida)
 
 
 if __name__ == "__main__":

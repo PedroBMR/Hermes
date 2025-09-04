@@ -62,7 +62,7 @@ def menu_principal(usuario_id, nome_usuario):
                     input("Deseja salvar a ideia mesmo assim? (s/N): ").strip().lower()
                     == "s"
                 ):
-                    salvar_ideia(usuario_id, f"{titulo}\n\n{descricao}")
+                    salvar_ideia(usuario_id, titulo, descricao)
                     logger.info("✅ Ideia registrada sem sugestões.")
                 else:
                     logger.info("❌ Ideia não registrada.")
@@ -70,8 +70,8 @@ def menu_principal(usuario_id, nome_usuario):
             ideias = listar_ideias(usuario_id)
             if ideias:
                 logger.info("\nMinhas ideias:")
-                for texto, data in ideias:
-                    logger.info("[%s] %s", data, texto)
+                for titulo, corpo, data in ideias:
+                    logger.info("[%s] %s - %s", data, titulo, corpo)
             else:
                 logger.info("Nenhuma ideia registrada.")
         elif opcao == "3":

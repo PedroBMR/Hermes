@@ -108,7 +108,7 @@ class HermesGUI(QWidget):
                 QMessageBox.Yes | QMessageBox.No,
             )
             if opcao == QMessageBox.Yes:
-                salvar_ideia(usuario_id, f"{titulo}\n\n{descricao}")
+                salvar_ideia(usuario_id, titulo, descricao)
                 QMessageBox.information(self, "Sucesso", "Ideia salva sem sugestões.")
             else:
                 return
@@ -123,14 +123,18 @@ class HermesGUI(QWidget):
         if not usuario_id:
             return
         ideias = listar_ideias_db(usuario_id)
-        for texto, data in ideias:
-            item = QListWidgetItem(f"{data[:10]} - {texto.splitlines()[0]}")
-            item.setData(1000, (data, texto))  # Armazena a ideia completa no item
+        for titulo, corpo, data in ideias:
+            item = QListWidgetItem(f"{data[:10]} - {titulo}")
+            item.setData(1000, (data, titulo, corpo))  # Armazena a ideia completa
             self.idea_list.addItem(item)
 
     def exibir_ideia_completa(self, item):
-        data, texto = item.data(1000)
-        QMessageBox.information(self, "Ideia Completa", f"📅 {data}\n\n{texto}")
+        data, titulo, corpo = item.data(1000)
+        QMessageBox.information(
+            self,
+            "Ideia Completa",
+            f"📅 {data}\n\n{titulo}\n\n{corpo}",
+        )
 
     def adicionar_usuario(self):
         nome, ok = QInputDialog.getText(self, "Novo Usuário", "Nome do usuário:")

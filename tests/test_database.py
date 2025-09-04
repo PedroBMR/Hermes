@@ -29,10 +29,11 @@ class TestDatabase(unittest.TestCase):
     def test_salvar_e_listar_ideias(self):
         database.criar_usuario("Carol", "Feminino")
         uid = database.buscar_usuarios()[0][0]
-        database.salvar_ideia(uid, "Minha ideia")
+        database.salvar_ideia(uid, "Titulo", "Minha ideia")
         ideias = database.listar_ideias(uid)
         self.assertEqual(len(ideias), 1)
-        texto, data = ideias[0]
+        titulo, texto, data = ideias[0]
+        self.assertEqual(titulo, "Titulo")
         self.assertEqual(texto, "Minha ideia")
         self.assertTrue(data)
 
