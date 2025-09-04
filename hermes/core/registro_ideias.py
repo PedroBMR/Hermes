@@ -24,9 +24,11 @@ Descrição: {descricao}
 
 1. Classifique um tema geral (ex: produtividade, tecnologia, pessoal).
 2. Sugira uma versão mais clara e resumida da descrição.
+3. Indique tags relacionadas separadas por vírgula.
 Responda no formato:
 Tema: <tema>
 Resumo: <resumo>
+Tags: <tag1, tag2>
 """
 
     resultado = gerar_resposta(prompt, url=url, model=model)
@@ -36,11 +38,14 @@ Resumo: <resumo>
     resposta = resultado["response"]
     tema = None
     resumo = None
+    tags = None
     for linha in resposta.splitlines():
         if linha.lower().startswith("tema:"):
             tema = linha.split(":", 1)[1].strip()
         elif linha.lower().startswith("resumo:"):
             resumo = linha.split(":", 1)[1].strip()
+        elif linha.lower().startswith("tags:"):
+            tags = linha.split(":", 1)[1].strip()
 
     add_idea(
         usuario_id,
@@ -49,6 +54,7 @@ Resumo: <resumo>
         source=url,
         llm_summary=resumo,
         llm_topic=tema,
+        tags=tags,
     )
     return resposta
 
