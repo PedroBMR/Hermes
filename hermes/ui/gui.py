@@ -1,8 +1,10 @@
+import csv
 import sys
 
 from PyQt5.QtWidgets import (
     QApplication,
     QComboBox,
+    QFileDialog,
     QInputDialog,
     QLabel,
     QLineEdit,
@@ -41,6 +43,9 @@ class HermesGUI(QWidget):
         self.save_button = QPushButton("Salvar Ideia")
         self.save_button.clicked.connect(self.salvar_ideia)
 
+        self.export_button = QPushButton("Exportar")
+        self.export_button.clicked.connect(self.exportar_ideias)
+
         self.idea_list_label = QLabel("Ideias registradas:")
         self.idea_list = QListWidget()
         self.idea_list.itemDoubleClicked.connect(self.exibir_ideia_completa)
@@ -55,6 +60,7 @@ class HermesGUI(QWidget):
         layout.addWidget(self.desc_label)
         layout.addWidget(self.desc_input)
         layout.addWidget(self.save_button)
+        layout.addWidget(self.export_button)
         layout.addWidget(self.idea_list_label)
         layout.addWidget(self.idea_list)
 
@@ -126,6 +132,33 @@ class HermesGUI(QWidget):
             item = QListWidgetItem(f"{data[:10]} - {titulo}")
             item.setData(1000, (data, titulo, corpo))  # Armazena a ideia completa
             self.idea_list.addItem(item)
+
+    def exportar_ideias(self):
+        selecionados = self.idea_list.selectedItems()
+        if not selecionados:
+            QMessageBox.warning(self, "Erro", "Selecione ao menos uma ideia.")
+            return
+        caminho, _ = QFileDialog.getSaveFileName(
+            self,
+            "Exportar Ideias",
+            "",
+            "CSV Files (*.csv);;Text Files (*.txt)",
+        )
+        if not caminho:
+            return
+        ideias = [item.data(1000) for item in selecionados]
+        if caminho.lower().endswith(".txt"):
+            with open(caminho, "w", encoding="utf-8") as f:
+                for data, titulo, corpo in ideias:
+                    f.write(f"{data} - {titulo}\n{corpo}\n\n")
+        else:
+            if not caminho.lower().endswith(".csv"):
+                caminho += ".csv"
+            with open(caminho, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(["data", "titulo", "corpo"])
+                writer.writerows(ideias)
+        QMessageBox.information(self, "Sucesso", "Ideias exportadas.")
 
     def exibir_ideia_completa(self, item):
         data, titulo, corpo = item.data(1000)
