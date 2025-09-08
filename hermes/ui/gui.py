@@ -17,9 +17,9 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from ..core.registro_ideias import registrar_ideia_com_llm
+from ..core.registro_ideias import analisar_ideia_com_llm, registrar_ideia_com_llm
 from ..data.database import buscar_usuarios, criar_usuario
-from ..services.db import add_idea, list_ideas
+from ..services.db import add_idea, list_ideas, update_idea
 
 
 class HermesGUI(QWidget):
@@ -43,12 +43,17 @@ class HermesGUI(QWidget):
         self.save_button = QPushButton("Salvar Ideia")
         self.save_button.clicked.connect(self.salvar_ideia)
 
+        self.process_button = QPushButton("Processar com IA")
+        self.process_button.setEnabled(False)
+        self.process_button.clicked.connect(self.processar_ideia_selecionada)
+
         self.export_button = QPushButton("Exportar")
         self.export_button.clicked.connect(self.exportar_ideias)
 
         self.idea_list_label = QLabel("Ideias registradas:")
         self.idea_list = QListWidget()
         self.idea_list.itemDoubleClicked.connect(self.exibir_ideia_completa)
+        self.idea_list.itemSelectionChanged.connect(self._atualizar_botao_processar)
 
         # Layout
         layout = QVBoxLayout()
@@ -60,6 +65,7 @@ class HermesGUI(QWidget):
         layout.addWidget(self.desc_label)
         layout.addWidget(self.desc_input)
         layout.addWidget(self.save_button)
+        layout.addWidget(self.process_button)
         layout.addWidget(self.export_button)
         layout.addWidget(self.idea_list_label)
         layout.addWidget(self.idea_list)
@@ -126,12 +132,10 @@ class HermesGUI(QWidget):
             return
         ideias = list_ideas(usuario_id)
         for ideia in ideias:
-            data = ideia["created_at"]
-            titulo = ideia["title"]
-            corpo = ideia["body"]
-            item = QListWidgetItem(f"{data[:10]} - {titulo}")
-            item.setData(1000, (data, titulo, corpo))  # Armazena a ideia completa
+            item = QListWidgetItem(f"{ideia['created_at'][:10]} - {ideia['title']}")
+            item.setData(1000, ideia)  # Armazena a ideia completa
             self.idea_list.addItem(item)
+        self._atualizar_botao_processar()
 
     def exportar_ideias(self):
         selecionados = self.idea_list.selectedItems()
@@ -149,24 +153,50 @@ class HermesGUI(QWidget):
         ideias = [item.data(1000) for item in selecionados]
         if caminho.lower().endswith(".txt"):
             with open(caminho, "w", encoding="utf-8") as f:
-                for data, titulo, corpo in ideias:
-                    f.write(f"{data} - {titulo}\n{corpo}\n\n")
+                for ideia in ideias:
+                    f.write(
+                        f"{ideia['created_at']} - {ideia['title']}\n{ideia['body']}\n\n"
+                    )
         else:
             if not caminho.lower().endswith(".csv"):
                 caminho += ".csv"
             with open(caminho, "w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 writer.writerow(["data", "titulo", "corpo"])
-                writer.writerows(ideias)
+                writer.writerows(
+                    (i["created_at"], i["title"], i["body"]) for i in ideias
+                )
         QMessageBox.information(self, "Sucesso", "Ideias exportadas.")
 
     def exibir_ideia_completa(self, item):
-        data, titulo, corpo = item.data(1000)
+        ideia = item.data(1000)
         QMessageBox.information(
             self,
             "Ideia Completa",
-            f"📅 {data}\n\n{titulo}\n\n{corpo}",
+            f"📅 {ideia['created_at']}\n\n{ideia['title']}\n\n{ideia['body']}",
         )
+
+    def _atualizar_botao_processar(self):
+        self.process_button.setEnabled(bool(self.idea_list.selectedItems()))
+
+    def processar_ideia_selecionada(self):
+        selecionados = self.idea_list.selectedItems()
+        if not selecionados:
+            return
+        item = selecionados[0]
+        ideia = item.data(1000)
+        try:
+            sugestoes = analisar_ideia_com_llm(ideia["title"], ideia["body"])
+            update_idea(
+                ideia["id"],
+                llm_summary=sugestoes["llm_summary"],
+                llm_topic=sugestoes["llm_topic"],
+            )
+            ideia["llm_summary"] = sugestoes["llm_summary"]
+            ideia["llm_topic"] = sugestoes["llm_topic"]
+            item.setData(1000, ideia)
+        except Exception as e:  # pragma: no cover - interface gráfica
+            QMessageBox.warning(self, "Erro", str(e))
 
     def adicionar_usuario(self):
         nome, ok = QInputDialog.getText(self, "Novo Usuário", "Nome do usuário:")

@@ -8,15 +8,17 @@ from ..services.llm_interface import gerar_resposta
 logger = logging.getLogger(__name__)
 
 
-def registrar_ideia_com_llm(
-    usuario_id: int,
+def analisar_ideia_com_llm(
     titulo: str,
     descricao: str,
     url: str | None = None,
     model: str | None = None,
-) -> str:
-    logger.info("Registrando ideia: %s", titulo)
-    logger.info("Enviando ideia ao modelo para sugestões...")
+) -> dict:
+    """Obtém sugestões do LLM sem persistir a ideia.
+
+    Retorna um dicionário contendo a resposta bruta do modelo e os campos
+    extraídos: ``llm_summary``, ``llm_topic`` e ``tags``.
+    """
 
     prompt = f"""Analise a seguinte ideia:
 Título: {titulo}
@@ -47,16 +49,36 @@ Tags: <tag1, tag2>
         elif linha.lower().startswith("tags:"):
             tags = linha.split(":", 1)[1].strip()
 
+    return {
+        "response": resposta,
+        "llm_summary": resumo,
+        "llm_topic": tema,
+        "tags": tags,
+    }
+
+
+def registrar_ideia_com_llm(
+    usuario_id: int,
+    titulo: str,
+    descricao: str,
+    url: str | None = None,
+    model: str | None = None,
+) -> str:
+    logger.info("Registrando ideia: %s", titulo)
+    logger.info("Enviando ideia ao modelo para sugestões...")
+
+    dados = analisar_ideia_com_llm(titulo, descricao, url=url, model=model)
+
     add_idea(
         usuario_id,
         titulo,
         descricao,
         source=url,
-        llm_summary=resumo,
-        llm_topic=tema,
-        tags=tags,
+        llm_summary=dados["llm_summary"],
+        llm_topic=dados["llm_topic"],
+        tags=dados["tags"],
     )
-    return resposta
+    return dados["response"]
 
 
 if __name__ == "__main__":
