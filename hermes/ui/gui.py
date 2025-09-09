@@ -43,12 +43,12 @@ class HermesGUI(QWidget):
         self.save_button = QPushButton("Salvar Ideia")
         self.save_button.clicked.connect(self.salvar_ideia)
 
+        self.export_button = QPushButton("Exportar")
+        self.export_button.clicked.connect(self.exportar_ideias)
+
         self.process_button = QPushButton("Processar com IA")
         self.process_button.setEnabled(False)
         self.process_button.clicked.connect(self.processar_ideia_selecionada)
-
-        self.export_button = QPushButton("Exportar")
-        self.export_button.clicked.connect(self.exportar_ideias)
 
         self.idea_list_label = QLabel("Ideias registradas:")
         self.idea_list = QListWidget()
@@ -65,8 +65,8 @@ class HermesGUI(QWidget):
         layout.addWidget(self.desc_label)
         layout.addWidget(self.desc_input)
         layout.addWidget(self.save_button)
-        layout.addWidget(self.process_button)
         layout.addWidget(self.export_button)
+        layout.addWidget(self.process_button)
         layout.addWidget(self.idea_list_label)
         layout.addWidget(self.idea_list)
 
