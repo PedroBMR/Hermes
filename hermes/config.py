@@ -21,6 +21,8 @@ class Config:
     API_PORT: int = 11434
     OLLAMA_MODEL: str = "mistral"
     TIMEOUT: int = 30  # seconds
+    MAX_RETRIES: int = 3
+    BACKOFF_FACTOR: float = 0.1
 
 
 logger = logging.getLogger(__name__)
@@ -38,6 +40,18 @@ def _safe_int(value: str | None, default: int, name: str) -> int:
         return default
 
 
+def _safe_float(value: str | None, default: float, name: str) -> float:
+    """Safely convert ``value`` to ``float``.
+
+    Logs a warning and returns ``default`` if conversion fails.
+    """
+    try:
+        return float(value) if value is not None else default
+    except (TypeError, ValueError):
+        logger.warning("Invalid %s %r; using %f", name, value, default)
+        return default
+
+
 def _from_env() -> Config:
     """Create a :class:`Config` instance from environment variables."""
     return Config(
@@ -48,6 +62,14 @@ def _from_env() -> Config:
         OLLAMA_MODEL=os.getenv("HERMES_OLLAMA_MODEL", Config.OLLAMA_MODEL),
         TIMEOUT=_safe_int(
             os.getenv("HERMES_TIMEOUT"), Config.TIMEOUT, "HERMES_TIMEOUT"
+        ),
+        MAX_RETRIES=_safe_int(
+            os.getenv("HERMES_MAX_RETRIES"), Config.MAX_RETRIES, "HERMES_MAX_RETRIES"
+        ),
+        BACKOFF_FACTOR=_safe_float(
+            os.getenv("HERMES_BACKOFF_FACTOR"),
+            Config.BACKOFF_FACTOR,
+            "HERMES_BACKOFF_FACTOR",
         ),
     )
 
@@ -69,6 +91,8 @@ def load_from_args(args: Sequence[str] | None = None) -> Config:
     parser.add_argument("--api-port")
     parser.add_argument("--ollama-model")
     parser.add_argument("--timeout")
+    parser.add_argument("--max-retries")
+    parser.add_argument("--backoff-factor")
 
     namespace, _ = parser.parse_known_args(args)
 
@@ -78,5 +102,11 @@ def load_from_args(args: Sequence[str] | None = None) -> Config:
         API_PORT=_safe_int(namespace.api_port, config.API_PORT, "--api-port"),
         OLLAMA_MODEL=namespace.ollama_model or config.OLLAMA_MODEL,
         TIMEOUT=_safe_int(namespace.timeout, config.TIMEOUT, "--timeout"),
+        MAX_RETRIES=_safe_int(
+            namespace.max_retries, config.MAX_RETRIES, "--max-retries"
+        ),
+        BACKOFF_FACTOR=_safe_float(
+            namespace.backoff_factor, config.BACKOFF_FACTOR, "--backoff-factor"
+        ),
     )
     return config
