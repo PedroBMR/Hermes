@@ -1,11 +1,39 @@
 """Registro de ideias utilizando o modelo de linguagem."""
 
 import logging
+from pathlib import Path
 
 from ..services.db import add_idea
 from ..services.llm_interface import gerar_resposta
 
 logger = logging.getLogger(__name__)
+
+
+# Caminho para o arquivo de prompt. Lido dinamicamente em cada execução
+PROMPT_PATH = Path(__file__).resolve().parents[2] / "prompts" / "resumo_classificar.md"
+
+
+def carregar_prompt() -> str:
+    """Carrega o template de prompt a partir de um arquivo.
+
+    Caso o arquivo seja YAML e a biblioteca ``yaml`` esteja disponível, a
+    chave ``template`` é utilizada. Caso contrário, o conteúdo é retornado
+    como texto simples. A leitura ocorre a cada chamada para refletir
+    alterações no arquivo.
+    """
+
+    texto = PROMPT_PATH.read_text(encoding="utf-8")
+    if PROMPT_PATH.suffix in {".yaml", ".yml"}:
+        try:
+            import yaml  # type: ignore
+
+            data = yaml.safe_load(texto)
+            if isinstance(data, dict):
+                return data.get("template", "")
+            return str(data)
+        except Exception:
+            return texto
+    return texto
 
 
 def analisar_ideia_com_llm(
@@ -20,18 +48,8 @@ def analisar_ideia_com_llm(
     extraídos: ``llm_summary``, ``llm_topic`` e ``tags``.
     """
 
-    prompt = f"""Analise a seguinte ideia:
-Título: {titulo}
-Descrição: {descricao}
-
-1. Classifique um tema geral (ex: produtividade, tecnologia, pessoal).
-2. Sugira uma versão mais clara e resumida da descrição.
-3. Indique tags relacionadas separadas por vírgula.
-Responda no formato:
-Tema: <tema>
-Resumo: <resumo>
-Tags: <tag1, tag2>
-"""
+    template = carregar_prompt()
+    prompt = template.format(titulo=titulo, descricao=descricao)
 
     resultado = gerar_resposta(prompt, url=url, model=model)
     if not resultado.get("ok", False):

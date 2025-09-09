@@ -1,7 +1,10 @@
 import unittest
 from unittest.mock import patch
 
-from hermes.core.registro_ideias import registrar_ideia_com_llm
+from hermes.core.registro_ideias import (
+    analisar_ideia_com_llm,
+    registrar_ideia_com_llm,
+)
 
 
 class TestRegistrarIdeiaComLLM(unittest.TestCase):
@@ -63,6 +66,31 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
 
         mock_llm.assert_called_once()
         mock_add.assert_not_called()
+
+
+def test_modificar_prompt_reflete_no_texto(tmp_path):
+    temp_prompt = tmp_path / "resumo_classificar.md"
+    temp_prompt.write_text("Primeiro {titulo} - {descricao}", encoding="utf-8")
+
+    with patch("hermes.core.registro_ideias.PROMPT_PATH", temp_prompt):
+        with patch(
+            "hermes.core.registro_ideias.gerar_resposta",
+            return_value={"ok": True, "response": ""},
+        ) as mock_llm:
+            analisar_ideia_com_llm("T1", "D1")
+            primeiro = mock_llm.call_args_list[-1].args[0]
+
+        temp_prompt.write_text("Segundo {titulo} - {descricao}", encoding="utf-8")
+        with patch(
+            "hermes.core.registro_ideias.gerar_resposta",
+            return_value={"ok": True, "response": ""},
+        ) as mock_llm:
+            analisar_ideia_com_llm("T2", "D2")
+            segundo = mock_llm.call_args_list[-1].args[0]
+
+    assert "Primeiro" in primeiro
+    assert "Segundo" in segundo
+    assert primeiro != segundo
 
 
 if __name__ == "__main__":
