@@ -104,6 +104,19 @@ for ideia in resultados:
 
 No modo CLI, selecione a opção **Pesquisar ideias** e informe o termo desejado.
 
+O mecanismo utiliza por padrão um índice simples baseado em TF-IDF.  Para
+substituí-lo por soluções mais avançadas como `FAISS` ou `Chroma`, implemente a
+interface ``VectorIndex`` e forneça a instância ao chamar ``semantic_search``:
+
+```python
+from hermes.services.semantic_search import semantic_search, VectorIndex
+
+class MeuIndice(VectorIndex):
+    ...  # implemente fit() e search()
+
+resultado = semantic_search("kanban", index=MeuIndice())
+```
+
 ## Testes
 
 Os testes automatizados utilizam o módulo `unittest` padrão do Python.
