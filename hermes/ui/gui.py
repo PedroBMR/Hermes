@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (
 from ..core.registro_ideias import analisar_ideia_com_llm, registrar_ideia_com_llm
 from ..data.database import buscar_usuarios, criar_usuario
 from ..services.db import add_idea, list_ideas, update_idea
+from ..services.reminders import start_scheduler
 
 
 class HermesGUI(QWidget):
@@ -259,6 +260,7 @@ class HermesGUI(QWidget):
 
 def main() -> None:
     """Inicia a interface gráfica do Hermes."""
+    start_scheduler()
     app = QApplication(sys.argv)
     gui = HermesGUI()
     gui.show()

@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from .services.db import add_idea, init_db
 from .services.llm_interface import gerar_resposta
+from .services.reminders import start_scheduler
 
 
 app = FastAPI()
@@ -56,6 +57,7 @@ class Prompt(BaseModel):
 @app.on_event("startup")
 def _startup() -> None:
     init_db()
+    start_scheduler()
 
 
 # --- Endpoints -------------------------------------------------------------
