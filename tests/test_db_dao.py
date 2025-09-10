@@ -85,3 +85,24 @@ def test_search_ideas_filters(setup_db):
 
     res = dao.search_ideas(user_id=user_id)
     assert {r["id"] for r in res} == {first, second}
+
+
+def test_reminder_crud(setup_db):
+    user_id, db_path = setup_db
+    rid = dao.add_reminder(user_id, "Call Bob", "2030-01-01T10:00:00")
+    reminders = dao.list_reminders(user_id)
+    assert reminders == [
+        {
+            "id": rid,
+            "user_id": user_id,
+            "message": "Call Bob",
+            "trigger_at": "2030-01-01T10:00:00",
+            "triggered_at": None,
+        }
+    ]
+    dao.mark_triggered(rid, "2030-01-01T10:05:00")
+    with sqlite3.connect(db_path) as conn:
+        trig = conn.execute(
+            "SELECT triggered_at FROM reminders WHERE id = ?", (rid,)
+        ).fetchone()[0]
+    assert trig == "2030-01-01T10:05:00"

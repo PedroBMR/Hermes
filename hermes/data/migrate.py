@@ -12,6 +12,17 @@ V2_COLUMNS = {
     "tags": "TEXT",
 }
 
+REMINDERS_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS reminders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    message TEXT NOT NULL,
+    trigger_at TEXT NOT NULL,
+    triggered_at TEXT,
+    FOREIGN KEY(user_id) REFERENCES usuarios(id)
+)
+"""
+
 
 def migrate_to_v2(db_path: str) -> None:
     """Upgrade the database at ``db_path`` to the v2 schema.
@@ -28,6 +39,8 @@ def migrate_to_v2(db_path: str) -> None:
         for column, col_type in V2_COLUMNS.items():
             if column not in existing:
                 cursor.execute(f"ALTER TABLE ideias ADD COLUMN {column} {col_type}")
+
+        cursor.execute(REMINDERS_TABLE_SQL)
 
 
 def main(argv: Sequence[str] | None = None) -> None:

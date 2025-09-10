@@ -9,6 +9,7 @@ and exposes CRUD operations for ideas.
 from __future__ import annotations
 
 import sqlite3
+from datetime import datetime
 from typing import Any, Iterable
 
 from ..config import config
@@ -60,6 +61,18 @@ def init_db() -> None:
                 llm_summary TEXT,
                 llm_topic TEXT,
                 tags TEXT,
+                FOREIGN KEY(user_id) REFERENCES usuarios(id)
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS reminders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                message TEXT NOT NULL,
+                trigger_at TEXT NOT NULL,
+                triggered_at TEXT,
                 FOREIGN KEY(user_id) REFERENCES usuarios(id)
             )
             """
@@ -219,3 +232,54 @@ def search_ideas(
         cursor = conn.cursor()
         cursor.execute(query, params)
         return _dicts(cursor, cursor.fetchall())
+
+
+def add_reminder(user_id: int, message: str, trigger_at: str) -> int:
+    """Insert a reminder and return its ``id``."""
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO reminders (user_id, message, trigger_at)
+            VALUES (?, ?, ?)
+            """,
+            (user_id, message, trigger_at),
+        )
+        return int(cursor.lastrowid)
+
+
+def list_reminders(user_id: int, only_pending: bool = False) -> list[dict]:
+    """Return reminders for ``user_id`` ordered by ``trigger_at``."""
+
+    conditions = ["user_id = ?"]
+    params: list[Any] = [user_id]
+    if only_pending:
+        conditions.append("triggered_at IS NULL")
+
+    query = (
+        "SELECT id, user_id, message, trigger_at, triggered_at FROM reminders"
+    )
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    query += " ORDER BY datetime(trigger_at) ASC"
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        return _dicts(cursor, cursor.fetchall())
+
+
+def mark_triggered(reminder_id: int, triggered_at: str | None = None) -> None:
+    """Mark a reminder as triggered by setting ``triggered_at``."""
+
+    if triggered_at is None:
+        triggered_at = datetime.utcnow().isoformat()
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE reminders SET triggered_at = ? WHERE id = ?",
+            (triggered_at, reminder_id),
+        )
