@@ -7,7 +7,7 @@ from hermes.ui import cli as main
 
 class TestMenuPrincipalIntegration(unittest.TestCase):
     def test_registra_ideia_fluxo(self):
-        inputs = iter(["1", "Titulo", "Descricao", "4"])
+        inputs = iter(["1", "Titulo", "Descricao", "5"])
         with (
             patch.object(
                 main, "registrar_ideia_com_llm", return_value="Tema: X\nResumo: Y"
@@ -26,7 +26,7 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
         self.assertIn("Tema: X", saida)
 
     def test_registra_sem_llm_quando_indisponivel(self):
-        inputs = iter(["1", "Titulo", "Descricao", "s", "4"])
+        inputs = iter(["1", "Titulo", "Descricao", "s", "5"])
         with (
             patch.object(
                 main, "registrar_ideia_com_llm", side_effect=RuntimeError("falha")
@@ -44,7 +44,7 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
         self.assertIn("Ideia registrada sem sugestões", saida)
 
     def test_listar_ideias_fluxo(self):
-        inputs = iter(["2", "4"])
+        inputs = iter(["2", "5"])
         ideias = [{"title": "Titulo", "body": "Texto", "created_at": "2024-01-01"}]
         with (
             patch.object(main, "list_ideas", return_value=ideias),
@@ -58,6 +58,26 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
         saida = fake_out.getvalue()
         self.assertIn("Minhas ideias", saida)
         self.assertIn("[2024-01-01] Titulo - Texto", saida)
+
+    def test_pesquisar_ideias_fluxo(self):
+        inputs = iter(["3", "busca", "5"])
+        ideias = [
+            {"title": "Titulo1", "body": "Texto1", "created_at": "2024-01-01"},
+            {"title": "Titulo2", "body": "Texto2", "created_at": "2024-01-02"},
+        ]
+        with (
+            patch.object(main, "semantic_search", return_value=ideias) as mock_search,
+            patch("builtins.input", lambda _: next(inputs)),
+            patch("sys.stdout", new_callable=io.StringIO) as fake_out,
+        ):
+            main.setup_logging()
+            result = main.menu_principal(1, "User")
+
+        self.assertFalse(result)
+        mock_search.assert_called_once_with("busca", user_id=1)
+        saida = fake_out.getvalue()
+        self.assertIn("Resultados da busca", saida)
+        self.assertIn("[2024-01-01] Titulo1 - Texto1", saida)
 
 
 if __name__ == "__main__":
