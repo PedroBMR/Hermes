@@ -12,6 +12,7 @@ requires-python = ">=3.10"
 dependencies = [
     "PyQt5>=5.15.9",
     "requests",
+    "apscheduler",
 ]
 
 [project.scripts]

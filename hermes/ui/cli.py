@@ -6,6 +6,7 @@ from ..core.registro_ideias import registrar_ideia_com_llm
 from ..logging import setup_logging
 from ..services.db import add_idea, add_user, init_db, list_ideas, list_users
 from ..services import semantic_search
+from ..services.reminders import start_scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +103,7 @@ def main(argv: list[str] | None = None):
     setup_logging()
     load_from_args(argv)
     init_db()
+    start_scheduler()
     while True:
         usuario_id = escolher_usuario()
         nome_usuario = next(
