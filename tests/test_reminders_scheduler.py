@@ -40,7 +40,14 @@ sys.modules.setdefault("apscheduler.schedulers", types.ModuleType("apscheduler.s
 sys.modules["apscheduler.schedulers.background"] = background
 
 services_pkg = types.ModuleType("hermes.services")
-services_pkg.__path__ = [str(pathlib.Path(__file__).resolve().parent.parent / "hermes" / "services")]
+services_pkg.__path__ = [
+    str(
+        pathlib.Path(__file__).resolve().parent.parent
+        / "src"
+        / "hermes"
+        / "services"
+    )
+]
 sys.modules["hermes.services"] = services_pkg
 
 from hermes.config import config

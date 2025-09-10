@@ -19,7 +19,8 @@ dependencies = [
 "hermes-db-migrate" = "hermes.data.migrate:main"
 
 [tool.setuptools.packages.find]
-where = ["."]
+# Use a ``src`` layout so the package resides under ``src/``.
+where = ["src"]
 include = ["hermes*"]
 
 [tool.black]

@@ -27,8 +27,8 @@ def gerar_resposta(
     prompt: str
         Texto a ser enviado ao modelo.
     url: str | None, optional
-        URL do endpoint de geração. Se ``None``, utiliza ``localhost`` com a
-        porta definida em :mod:`hermes.config`.
+        URL do endpoint de geração. Se ``None``, utiliza
+        :data:`hermes.config.config.OLLAMA_URL`.
     model: str | None, optional
         Nome do modelo a ser utilizado. Se ``None``, utiliza o valor de
         :mod:`hermes.config`.
@@ -37,7 +37,7 @@ def gerar_resposta(
         valor de :mod:`hermes.config`.
     """
 
-    url = url or f"http://localhost:{config.API_PORT}/api/generate"
+    url = url or f"{config.OLLAMA_URL}/api/generate"
     model = model or config.OLLAMA_MODEL
     timeout = timeout or config.TIMEOUT
 

@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def api_client(tmp_path, monkeypatch):
-    monkeypatch.setenv("HERMES_TOKEN", "secret")
+    monkeypatch.setenv("HERMES_API_TOKEN", "secret")
     db_file = tmp_path / "api.db"
 
     from hermes.services import db as dao

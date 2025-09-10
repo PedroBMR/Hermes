@@ -20,6 +20,8 @@ class Config:
     DB_PATH: str = "hermes.db"
     API_PORT: int = 11434
     OLLAMA_MODEL: str = "mistral"
+    OLLAMA_URL: str = "http://localhost:11434"
+    API_TOKEN: str = ""
     TIMEOUT: int = 30  # seconds
     MAX_RETRIES: int = 3
     BACKOFF_FACTOR: float = 0.1
@@ -60,6 +62,8 @@ def _from_env() -> Config:
             os.getenv("HERMES_API_PORT"), Config.API_PORT, "HERMES_API_PORT"
         ),
         OLLAMA_MODEL=os.getenv("HERMES_OLLAMA_MODEL", Config.OLLAMA_MODEL),
+        OLLAMA_URL=os.getenv("HERMES_OLLAMA_URL", Config.OLLAMA_URL),
+        API_TOKEN=os.getenv("HERMES_API_TOKEN", Config.API_TOKEN),
         TIMEOUT=_safe_int(
             os.getenv("HERMES_TIMEOUT"), Config.TIMEOUT, "HERMES_TIMEOUT"
         ),
@@ -90,6 +94,8 @@ def load_from_args(args: Sequence[str] | None = None) -> Config:
     parser.add_argument("--db-path")
     parser.add_argument("--api-port")
     parser.add_argument("--ollama-model")
+    parser.add_argument("--ollama-url")
+    parser.add_argument("--api-token")
     parser.add_argument("--timeout")
     parser.add_argument("--max-retries")
     parser.add_argument("--backoff-factor")
@@ -101,6 +107,8 @@ def load_from_args(args: Sequence[str] | None = None) -> Config:
         DB_PATH=namespace.db_path or config.DB_PATH,
         API_PORT=_safe_int(namespace.api_port, config.API_PORT, "--api-port"),
         OLLAMA_MODEL=namespace.ollama_model or config.OLLAMA_MODEL,
+        OLLAMA_URL=namespace.ollama_url or config.OLLAMA_URL,
+        API_TOKEN=namespace.api_token or config.API_TOKEN,
         TIMEOUT=_safe_int(namespace.timeout, config.TIMEOUT, "--timeout"),
         MAX_RETRIES=_safe_int(
             namespace.max_retries, config.MAX_RETRIES, "--max-retries"

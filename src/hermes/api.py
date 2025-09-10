@@ -5,6 +5,7 @@ import time
 from fastapi import FastAPI, HTTPException, Request, Depends, Header
 from pydantic import BaseModel
 
+from .config import config
 from .services.db import add_idea, init_db
 from .services.llm_interface import gerar_resposta
 from .services.reminders import start_scheduler
@@ -15,7 +16,7 @@ app = FastAPI()
 # --- Auth -----------------------------------------------------------------
 
 def verify_token(x_token: str = Header(...)) -> None:
-    expected = os.getenv("HERMES_TOKEN")
+    expected = config.API_TOKEN
     if not expected or x_token != expected:
         raise HTTPException(status_code=401, detail="Invalid token")
 
