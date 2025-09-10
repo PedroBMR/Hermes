@@ -1,16 +1,17 @@
 """Semantic search utilities for Hermes.
 
-This module implements a small vector index based on TF-IDF so that ideas
-stored in the database can be searched using cosine similarity.  The
-``VectorIndex`` class abstracts the backend so that in the future the
-implementation can be replaced by FAISS, Chroma or any other vector store
-without changing the public API.
+The :mod:`semantic_search` module exposes a small pluggable interface,
+``VectorIndex``, used to build and query vector representations of ideas.
+The default implementation relies on scikit-learn's TF-IDF vectorizer, but
+alternative backends such as `FAISS <https://github.com/facebookresearch/faiss>`_
+or `Chroma <https://github.com/chroma-core/chroma>`_ can be integrated by
+providing another ``VectorIndex`` implementation.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Protocol, Tuple
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -18,14 +19,35 @@ from sklearn.metrics.pairwise import cosine_similarity
 from .db import list_ideas, search_ideas
 
 
-@dataclass
-class VectorIndex:
-    """Simple in-memory vector index using TF-IDF.
+class VectorIndex(Protocol):
+    """Interface for vector search backends.
 
-    The class is intentionally lightweight and provides only the minimal
-    interface needed by :func:`semantic_search`.  Future backends can replace
-    this implementation as long as they expose ``fit`` and ``search`` methods
-    with the same signatures.
+    Any backend providing semantic search capabilities must implement this
+    protocol.  Only two methods are required: :meth:`fit` to build the index
+    from raw documents and :meth:`search` to return the most similar document
+    identifiers for a query string.
+    """
+
+    def fit(self, documents: Iterable[str], ids: Iterable[int]) -> None:
+        """Build the index from ``documents`` associated with ``ids``."""
+
+        ...
+
+    def search(self, query: str, limit: int = 10) -> List[Tuple[int, float]]:
+        """Return ``limit`` document ids ranked by similarity to ``query``."""
+
+        ...
+
+
+@dataclass
+class TfidfVectorIndex:
+    """Simple in-memory vector index using scikit-learn's TF-IDF.
+
+    This serves as the default backend used by :func:`semantic_search`.  It is
+    intentionally lightweight and provides only the minimal functionality
+    required.  Custom indexes (e.g. FAISS or Chroma) can replace this class by
+    implementing the :class:`VectorIndex` protocol and passing an instance to
+    :func:`semantic_search`.
     """
 
     vectorizer: TfidfVectorizer = field(default_factory=TfidfVectorizer)
@@ -33,14 +55,10 @@ class VectorIndex:
     ids: List[int] = field(default_factory=list)
 
     def fit(self, documents: Iterable[str], ids: Iterable[int]) -> None:
-        """Build the index from ``documents`` associated with ``ids``."""
-
         self.matrix = self.vectorizer.fit_transform(list(documents))
         self.ids = list(ids)
 
     def search(self, query: str, limit: int = 10) -> List[Tuple[int, float]]:
-        """Return ``limit`` document ids ranked by similarity to ``query``."""
-
         if not query or self.matrix is None:
             return []
 
@@ -66,6 +84,7 @@ def semantic_search(
     query: str,
     user_id: int | None = None,
     limit: int = 10,
+    index: VectorIndex | None = None,
 ) -> list[dict]:
     """Search ideas semantically using cosine similarity over TF-IDF vectors.
 
@@ -77,6 +96,9 @@ def semantic_search(
         If provided, restrict search to ideas from this user.
     limit: int, default ``10``
         Maximum number of ideas to return.
+    index: VectorIndex | None, optional
+        Custom backend implementing :class:`VectorIndex`.  When ``None`` a
+        :class:`TfidfVectorIndex` instance is used.
 
     Returns
     -------
@@ -92,12 +114,12 @@ def semantic_search(
     documents = [_idea_to_text(idea) for idea in ideas]
     ids = list(id_map.keys())
 
-    index = VectorIndex()
-    index.fit(documents, ids)
-    ranked = index.search(query, limit)
+    backend = index or TfidfVectorIndex()
+    backend.fit(documents, ids)
+    ranked = backend.search(query, limit)
 
     return [id_map[i] for i, _ in ranked]
 
 
-__all__ = ["semantic_search", "VectorIndex"]
+__all__ = ["semantic_search", "VectorIndex", "TfidfVectorIndex"]
 
