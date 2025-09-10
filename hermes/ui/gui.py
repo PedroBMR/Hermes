@@ -1,6 +1,7 @@
 import csv
 import json
 import sys
+import pyttsx3
 
 import sounddevice as sd
 import vosk
@@ -119,6 +120,7 @@ class HermesGUI(QWidget):
             return
 
         usuario_id = self.usuarios_map.get(usuario_display)
+        ideia_salva = False
         try:
             sugestoes = registrar_ideia_com_llm(usuario_id, titulo, descricao)
             QMessageBox.information(
@@ -126,6 +128,7 @@ class HermesGUI(QWidget):
                 "Sucesso",
                 f"Ideia salva com sucesso.\n\nSugestões do modelo:\n{sugestoes}",
             )
+            ideia_salva = True
         except RuntimeError as e:
             opcao = QMessageBox.question(
                 self,
@@ -136,8 +139,13 @@ class HermesGUI(QWidget):
             if opcao == QMessageBox.Yes:
                 add_idea(usuario_id, titulo, descricao)
                 QMessageBox.information(self, "Sucesso", "Ideia salva sem sugestões.")
+                ideia_salva = True
             else:
                 return
+        if ideia_salva:
+            engine = pyttsx3.init()
+            engine.say("ideia salva")
+            engine.runAndWait()
         self.title_input.clear()
         self.desc_input.clear()
         self.listar_ideias()
