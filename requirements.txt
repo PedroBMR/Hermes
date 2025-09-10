@@ -3,6 +3,7 @@ requests
 fastapi
 "pydantic>=1,<3"
 pyttsx3
+scikit-learn
 vosk==0.3.45  # speech recognition
 
 # Optional dependencies for future features (not required for basic usage):
