@@ -8,6 +8,7 @@ from .services.reminders import start_scheduler
 
 def main(argv: list[str] | None = None) -> None:
     """Launch the graphical user interface."""
+    # Initialize logging early so the log directory is created
     setup_logging()
     load_from_args(argv)
     start_scheduler()
