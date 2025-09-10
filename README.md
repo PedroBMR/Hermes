@@ -16,6 +16,9 @@ Caso deseje instalar apenas as dependências listadas, utilize `requirements.txt
 pip install -r requirements.txt
 ```
 
+O arquivo de requisitos inclui o pacote `scikit-learn` (>=1.1),
+necessário para a funcionalidade de busca semântica de ideias.
+
 ### Dependências opcionais
 
 Algumas funcionalidades podem requerer bibliotecas adicionais que não
@@ -85,6 +88,21 @@ python -m hermes
 Na interface, os campos de título e descrição possuem um botão de microfone
 ("🎙️") que permite ditar texto. Ao salvar uma ideia com sucesso, o Hermes
 fornece um breve feedback em voz dizendo "ideia salva".
+
+### Pesquisa semântica
+A aplicação oferece uma pesquisa de ideias baseada em similaridade
+semântica. Após instalar as dependências, importe e utilize a função
+`semantic_search`:
+
+```python
+from hermes.services.semantic_search import semantic_search
+
+resultados = semantic_search("kanban", user_id=1)
+for ideia in resultados:
+    print(ideia["title"])
+```
+
+No modo CLI, selecione a opção **Pesquisar ideias** e informe o termo desejado.
 
 ## Testes
 
