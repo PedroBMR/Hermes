@@ -5,6 +5,7 @@ from ..config import load_from_args
 from ..core.registro_ideias import registrar_ideia_com_llm
 from ..logging import setup_logging
 from ..services.db import add_idea, add_user, init_db, list_ideas, list_users
+from ..services import semantic_search
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +39,9 @@ def menu_principal(usuario_id, nome_usuario):
         logger.info("\n=== Hermes (Usuário: %s) ===", nome_usuario)
         logger.info("1. Registrar nova ideia")
         logger.info("2. Listar minhas ideias")
-        logger.info("3. Trocar de usuário")
-        logger.info("4. Sair")
+        logger.info("3. Pesquisar ideias")
+        logger.info("4. Trocar de usuário")
+        logger.info("5. Sair")
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
@@ -74,8 +76,22 @@ def menu_principal(usuario_id, nome_usuario):
             else:
                 logger.info("Nenhuma ideia registrada.")
         elif opcao == "3":
-            return True  # trocar de usuário
+            termo = input("Texto de busca: ")
+            resultados = semantic_search(termo, user_id=usuario_id)
+            if resultados:
+                logger.info("\nResultados da busca:")
+                for ideia in resultados:
+                    logger.info(
+                        "[%s] %s - %s",
+                        ideia["created_at"],
+                        ideia["title"],
+                        ideia["body"],
+                    )
+            else:
+                logger.info("Nenhuma ideia encontrada.")
         elif opcao == "4":
+            return True  # trocar de usuário
+        elif opcao == "5":
             logger.info("Encerrando Hermes.")
             return False
         else:

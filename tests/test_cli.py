@@ -8,12 +8,12 @@ from hermes.ui import cli
 
 class TestCLI(unittest.TestCase):
     def test_menu_principal_quit_returns_false(self):
-        with patch("builtins.input", side_effect=["4"]):
+        with patch("builtins.input", side_effect=["5"]):
             result = cli.menu_principal(1, "User")
         self.assertFalse(result)
 
     def test_main_exits_cleanly(self):
-        inputs = iter(["1", "4"])
+        inputs = iter(["1", "5"])
         with (
             patch("hermes.services.db.init_db"),
             patch(
