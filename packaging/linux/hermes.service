@@ -1,0 +1,13 @@
+[Unit]
+Description=Hermes API service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/hermes
+EnvironmentFile=-/etc/default/hermes
+ExecStart=/usr/bin/env python -m hermes.api
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
