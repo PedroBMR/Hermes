@@ -18,13 +18,18 @@ pip install -r requirements.txt
 
 ### Dependências opcionais
 
-Algumas funcionalidades futuras podem requerer bibliotecas adicionais que não
+Algumas funcionalidades podem requerer bibliotecas adicionais que não
 estão incluídas na instalação padrão:
 
-- `vosk` – reconhecimento de fala.
+- `vosk` – reconhecimento de fala. **Obrigatório** para utilizar a entrada
+  por voz.
 - `ollama` – cliente Python para o servidor Ollama.
 
-Instale-as manualmente caso deseje experimentar esses recursos.
+Para usar voz, instale o `vosk` e baixe o modelo de linguagem [pt-BR pequeno](https://alphacephei.com/vosk/models/vosk-model-small-pt-0.3.zip).
+Descompacte o conteúdo em `~/.cache/vosk/vosk-model-small-pt-0.3` para que o
+aplicativo consiga localizar os arquivos offline.
+
+Instale as dependências manualmente caso deseje experimentar esses recursos.
 
 ## Servidor LLM
 
@@ -76,6 +81,10 @@ Para abrir a interface gráfica (PyQt5):
 ```bash
 python -m hermes
 ```
+
+Na interface, os campos de título e descrição possuem um botão de microfone
+("🎙️") que permite ditar texto. Ao salvar uma ideia com sucesso, o Hermes
+fornece um breve feedback em voz dizendo "ideia salva".
 
 ## Testes
 
