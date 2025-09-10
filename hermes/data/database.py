@@ -39,6 +39,19 @@ def inicializar_banco():
             """
         )
 
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS reminders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                message TEXT NOT NULL,
+                trigger_at TEXT NOT NULL,
+                triggered_at TEXT,
+                FOREIGN KEY(user_id) REFERENCES usuarios(id)
+            )
+            """
+        )
+
     migrate_to_v2(DB_PATH)
 
 def criar_usuario(nome, tipo, voz_id=None):

@@ -29,4 +29,16 @@ def test_migrate_to_v2_preserves_rows_and_adds_columns(tmp_path):
         assert rows == [(1, "old", "2023-01-01", None, None, None, None)]
         cur = conn.execute("PRAGMA table_info(ideias)")
         cols = {row[1] for row in cur.fetchall()}
-    assert {"usuario_id", "texto", "data", "source", "llm_summary", "llm_topic", "tags"}.issubset(cols)
+        cur = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='reminders'"
+        )
+        assert cur.fetchone() is not None
+    assert {
+        "usuario_id",
+        "texto",
+        "data",
+        "source",
+        "llm_summary",
+        "llm_topic",
+        "tags",
+    }.issubset(cols)

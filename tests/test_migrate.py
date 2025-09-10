@@ -27,6 +27,10 @@ def test_migrate_adds_columns(tmp_path):
     with sqlite3.connect(str(db)) as conn:
         cur = conn.execute("PRAGMA table_info(ideias)")
         cols = {row[1] for row in cur.fetchall()}
+        cur = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='reminders'"
+        )
+        assert cur.fetchone() is not None
     assert {"source", "llm_summary", "llm_topic", "tags"}.issubset(cols)
     migrate_to_v2(str(db))  # idempotent
 
@@ -39,4 +43,8 @@ def test_migration_cli(tmp_path, monkeypatch):
     with sqlite3.connect(str(db)) as conn:
         cur = conn.execute("PRAGMA table_info(ideias)")
         cols = {row[1] for row in cur.fetchall()}
+        cur = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='reminders'"
+        )
+        assert cur.fetchone() is not None
     assert {"source", "llm_summary", "llm_topic", "tags"}.issubset(cols)
