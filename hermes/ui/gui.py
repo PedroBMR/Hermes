@@ -1,5 +1,9 @@
 import csv
+import json
 import sys
+
+import sounddevice as sd
+import vosk
 
 from PyQt5.QtWidgets import (
     QApplication,
@@ -12,6 +16,7 @@ from PyQt5.QtWidgets import (
     QListWidgetItem,
     QMessageBox,
     QPushButton,
+    QHBoxLayout,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -36,9 +41,19 @@ class HermesGUI(QWidget):
 
         self.title_label = QLabel("Título:")
         self.title_input = QLineEdit()
+        self.title_mic = QPushButton("🎙️")
+        self.title_mic.clicked.connect(lambda: self.capturar_fala("titulo"))
+        title_layout = QHBoxLayout()
+        title_layout.addWidget(self.title_input)
+        title_layout.addWidget(self.title_mic)
 
         self.desc_label = QLabel("Descrição:")
         self.desc_input = QTextEdit()
+        self.desc_mic = QPushButton("🎙️")
+        self.desc_mic.clicked.connect(lambda: self.capturar_fala("descricao"))
+        desc_layout = QHBoxLayout()
+        desc_layout.addWidget(self.desc_input)
+        desc_layout.addWidget(self.desc_mic)
 
         self.save_button = QPushButton("Salvar Ideia")
         self.save_button.clicked.connect(self.salvar_ideia)
@@ -61,9 +76,9 @@ class HermesGUI(QWidget):
         layout.addWidget(self.user_combo)
         layout.addWidget(self.new_user_button)
         layout.addWidget(self.title_label)
-        layout.addWidget(self.title_input)
+        layout.addLayout(title_layout)
         layout.addWidget(self.desc_label)
-        layout.addWidget(self.desc_input)
+        layout.addLayout(desc_layout)
         layout.addWidget(self.save_button)
         layout.addWidget(self.export_button)
         layout.addWidget(self.process_button)
@@ -74,6 +89,9 @@ class HermesGUI(QWidget):
 
         self.carregar_usuarios()
         self.user_combo.currentIndexChanged.connect(self.listar_ideias)
+
+        # Modelo de reconhecimento de fala Vosk
+        self.vosk_model = vosk.Model(lang="pt-br")
 
     def carregar_usuarios(self):
         self.user_combo.clear()
@@ -123,6 +141,24 @@ class HermesGUI(QWidget):
         self.title_input.clear()
         self.desc_input.clear()
         self.listar_ideias()
+
+    def capturar_fala(self, campo: str) -> None:
+        """Captura fala do microfone e preenche o campo indicado."""
+        try:
+            duracao = 5  # segundos
+            sd.default.samplerate = 16000
+            sd.default.channels = 1
+            audio = sd.rec(int(duracao * sd.default.samplerate), dtype="int16")
+            sd.wait()
+            rec = vosk.KaldiRecognizer(self.vosk_model, sd.default.samplerate)
+            rec.AcceptWaveform(audio.tobytes())
+            texto = json.loads(rec.Result()).get("text", "")
+            if campo == "titulo":
+                self.title_input.setText(texto)
+            else:
+                self.desc_input.setPlainText(texto)
+        except Exception as e:  # pragma: no cover - envolve hardware
+            QMessageBox.warning(self, "Erro", f"Falha ao capturar fala: {e}")
 
     def listar_ideias(self):
         usuario_display = self.user_combo.currentText()
