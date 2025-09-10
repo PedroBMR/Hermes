@@ -1,0 +1,11 @@
+# Base URL of the Hermes server
+server: "http://localhost:8000"
+
+# Authentication token for API requests
+# Obtain this token from your Hermes server instance
+token: "replace-with-secret-token"
+
+# Identifier for this client device
+# Used by the server to mark message provenance
+# Example: 'cozinha' or 'sala'
+device_id: "cozinha"
