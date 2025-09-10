@@ -34,6 +34,60 @@ aplicativo consiga localizar os arquivos offline.
 
 Instale as dependências manualmente caso deseje experimentar esses recursos.
 
+## Instalação Windows
+
+### Dependências mínimas
+
+- Windows 10 ou superior
+- Python 3.11+ com `pip`
+- [PyInstaller](https://pyinstaller.org) (`pip install pyinstaller`)
+
+### Passos
+
+1. Instale as dependências do projeto:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Gere os executáveis com o script de build:
+   ```powershell
+   packaging\windows\build.bat
+   ```
+   Os arquivos `hermes.exe` e `hermes_api.exe` serão criados em `dist\hermes`.
+3. Execute `dist\hermes\hermes.exe` para iniciar a interface.
+
+### Verificação
+
+- A execução de `hermes.exe` deve abrir a interface gráfica.
+
+## Instalação Linux
+
+### Dependências mínimas
+
+- Python 3.11+ com `pip`
+- Sistema com `systemd`
+- `curl` (para verificação)
+
+### Passos
+
+1. Instale as dependências do projeto:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Garanta que o código do Hermes esteja disponível em `/opt/hermes`
+   (ou ajuste `WorkingDirectory` em `hermes.service`).
+3. Instale e ative o serviço:
+   ```bash
+   sudo ./packaging/linux/install.sh
+   ```
+
+### Verificação
+
+- Com o serviço ativo, verifique:
+  ```bash
+  curl localhost:8000/health
+  ```
+  A resposta deve ser `{ "status": "ok" }`.
+
 ## Servidor LLM
 
 Para funcionalidades que usam o modelo de linguagem é necessário que um
