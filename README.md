@@ -117,6 +117,13 @@ class MeuIndice(VectorIndex):
 resultado = semantic_search("kanban", index=MeuIndice())
 ```
 
+### Reminders
+
+Agende lembretes simples pelo modo CLI. No menu principal, escolha **Criar
+lembrete** e informe a mensagem e o tempo relativo, como `+1 minute`. Use
+**Listar meus lembretes** para visualizar lembretes pendentes e já
+disparados.
+
 ## Testes
 
 Os testes automatizados utilizam o módulo `unittest` padrão do Python.
