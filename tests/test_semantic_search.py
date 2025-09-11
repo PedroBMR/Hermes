@@ -1,10 +1,10 @@
+import sys
+import types
+
 import pytest
 
 # Ensure a 'requests' stub is available before importing hermes.services.
 import tests.requests_stub  # noqa: F401
-
-import sys
-import types
 
 # Stub out 'hermes.services.llm_interface' to avoid heavy dependencies.
 sys.modules.setdefault(
@@ -75,9 +75,9 @@ sys.modules.setdefault("sklearn.feature_extraction.text", text)
 sys.modules.setdefault("sklearn.metrics", metrics)
 sys.modules.setdefault("sklearn.metrics.pairwise", pairwise)
 
-from hermes.services.semantic_search import semantic_search  # noqa: E402
-from hermes.services import db as dao  # noqa: E402
 from hermes.data import database  # noqa: E402
+from hermes.services import db as dao  # noqa: E402
+from hermes.services.semantic_search import semantic_search  # noqa: E402
 
 
 @pytest.fixture

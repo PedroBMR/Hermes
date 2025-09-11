@@ -5,7 +5,7 @@ from datetime import datetime
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from .db import list_users, list_reminders, mark_triggered
+from .db import list_reminders, list_users, mark_triggered
 
 logger = logging.getLogger(__name__)
 

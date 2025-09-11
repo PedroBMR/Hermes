@@ -10,7 +10,6 @@ from urllib3.util.retry import Retry
 
 from ..config import config
 
-
 logger = logging.getLogger(__name__)
 
 

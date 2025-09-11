@@ -1,10 +1,11 @@
-from datetime import datetime, timedelta
-import types
-import sys
 import importlib
 import pathlib
+import sys
+import types
+from datetime import datetime, timedelta
 
 import pytest
+
 from tests import requests_stub  # noqa: F401 ensure 'requests' stub
 
 

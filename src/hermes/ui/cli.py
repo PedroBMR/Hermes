@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from ..config import load_from_args
 from ..core.registro_ideias import registrar_ideia_com_llm
 from ..logging import setup_logging
+from ..services import semantic_search
 from ..services.db import (
     add_idea,
     add_reminder,
@@ -14,7 +15,6 @@ from ..services.db import (
     list_reminders,
     list_users,
 )
-from ..services import semantic_search
 from ..services.reminders import load_pending_reminders, start_scheduler
 
 logger = logging.getLogger(__name__)
