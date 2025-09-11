@@ -189,12 +189,14 @@ python -m unittest discover -s tests
 
 ## Desenvolvimento
 
-Instale e configure os linters com [pre-commit](https://pre-commit.com/):
+Instale e configure os linters com [pre-commit](https://pre-commit.com/). Após clonar o repositório, execute:
 
 ```bash
 pip install pre-commit
 pre-commit install
 ```
+
+O comando `pre-commit install` garante que os linters `ruff`, `black` e `isort` sejam executados automaticamente antes de cada commit.
 
 Consulte também [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo de contribuição,
 [CHANGELOG.md](CHANGELOG.md) para o histórico de mudanças e
