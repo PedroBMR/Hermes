@@ -3,8 +3,8 @@ import unittest
 from unittest.mock import patch
 
 import requests
-import tests.requests_stub  # noqa: F401
 
+import tests.requests_stub  # noqa: F401
 from hermes.services import llm_interface
 
 

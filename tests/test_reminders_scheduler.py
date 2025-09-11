@@ -1,10 +1,11 @@
-from datetime import datetime, timedelta
-import types
-import sys
 import importlib
 import pathlib
+import sys
+import types
+from datetime import datetime, timedelta
 
 import pytest
+
 from tests import requests_stub  # noqa: F401 ensure 'requests' stub
 
 
@@ -51,6 +52,7 @@ services_pkg.__path__ = [
 sys.modules["hermes.services"] = services_pkg
 
 from hermes.config import config
+
 db = importlib.import_module("hermes.services.db")
 reminders = importlib.import_module("hermes.services.reminders")
 

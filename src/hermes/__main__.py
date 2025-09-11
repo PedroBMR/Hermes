@@ -2,8 +2,8 @@
 
 from .config import load_from_args
 from .logging import setup_logging
-from .ui import gui
 from .services.reminders import start_scheduler
+from .ui import gui
 
 
 def main(argv: list[str] | None = None) -> None:
