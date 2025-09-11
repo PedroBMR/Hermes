@@ -5,6 +5,8 @@ import sys
 import pyttsx3
 import sounddevice as sd
 import vosk
+
+from PyQt5.QtCore import QFutureWatcher, QtConcurrent
 from PyQt5.QtWidgets import (
     QApplication,
     QComboBox,
@@ -24,7 +26,7 @@ from PyQt5.QtWidgets import (
 
 from ..core.registro_ideias import analisar_ideia_com_llm, registrar_ideia_com_llm
 from ..data.database import buscar_usuarios, criar_usuario
-from ..services.db import add_idea, list_ideas, update_idea
+from ..services.db import add_idea, list_ideas, search_ideas, update_idea
 from ..services.reminders import start_scheduler
 
 
@@ -66,6 +68,26 @@ class HermesGUI(QWidget):
         self.process_button.setEnabled(False)
         self.process_button.clicked.connect(self.processar_ideia_selecionada)
 
+        # Busca e filtros
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Buscar...")
+        self.search_user_combo = QComboBox()
+        self.search_user_combo.addItem("Todos", None)
+        self.start_date_input = QLineEdit()
+        self.start_date_input.setPlaceholderText("Data início (AAAA-MM-DD)")
+        self.end_date_input = QLineEdit()
+        self.end_date_input.setPlaceholderText("Data fim (AAAA-MM-DD)")
+        self.search_button = QPushButton("Buscar")
+        self.search_button.clicked.connect(self.buscar_ideias)
+        self.search_watcher = QFutureWatcher()
+        self.search_watcher.finished.connect(self._exibir_resultados_busca)
+        search_layout = QHBoxLayout()
+        search_layout.addWidget(self.search_input)
+        search_layout.addWidget(self.search_user_combo)
+        search_layout.addWidget(self.start_date_input)
+        search_layout.addWidget(self.end_date_input)
+        search_layout.addWidget(self.search_button)
+
         self.idea_list_label = QLabel("Ideias registradas:")
         self.idea_list = QListWidget()
         self.idea_list.itemDoubleClicked.connect(self.exibir_ideia_completa)
@@ -83,6 +105,7 @@ class HermesGUI(QWidget):
         layout.addWidget(self.save_button)
         layout.addWidget(self.export_button)
         layout.addWidget(self.process_button)
+        layout.addLayout(search_layout)
         layout.addWidget(self.idea_list_label)
         layout.addWidget(self.idea_list)
 
@@ -96,11 +119,14 @@ class HermesGUI(QWidget):
 
     def carregar_usuarios(self):
         self.user_combo.clear()
+        self.search_user_combo.clear()
+        self.search_user_combo.addItem("Todos", None)
         usuarios = buscar_usuarios()
         self.usuarios_map = {}
         for uid, nome, tipo in usuarios:
             display = f"{nome} ({tipo})"
             self.user_combo.addItem(display)
+            self.search_user_combo.addItem(display, uid)
             self.usuarios_map[display] = uid
         if usuarios:
             self.user_combo.blockSignals(True)
@@ -167,6 +193,29 @@ class HermesGUI(QWidget):
                 self.desc_input.setPlainText(texto)
         except Exception as e:  # pragma: no cover - envolve hardware
             QMessageBox.warning(self, "Erro", f"Falha ao capturar fala: {e}")
+
+    def buscar_ideias(self):
+        user_id = self.search_user_combo.currentData()
+        texto = self.search_input.text().strip() or None
+        self.search_button.setEnabled(False)
+        future = QtConcurrent.run(search_ideas, user_id, texto)
+        self.search_watcher.setFuture(future)
+
+    def _exibir_resultados_busca(self):
+        ideias = self.search_watcher.future().result()
+        inicio = self.start_date_input.text().strip()
+        fim = self.end_date_input.text().strip()
+        if inicio:
+            ideias = [i for i in ideias if i["created_at"][:10] >= inicio]
+        if fim:
+            ideias = [i for i in ideias if i["created_at"][:10] <= fim]
+        self.idea_list.clear()
+        for ideia in ideias:
+            item = QListWidgetItem(f"{ideia['created_at'][:10]} - {ideia['title']}")
+            item.setData(1000, ideia)
+            self.idea_list.addItem(item)
+        self.search_button.setEnabled(True)
+        self._atualizar_botao_processar()
 
     def listar_ideias(self):
         usuario_display = self.user_combo.currentText()
