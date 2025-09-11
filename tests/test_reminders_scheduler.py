@@ -50,7 +50,7 @@ services_pkg.__path__ = [
 ]
 sys.modules["hermes.services"] = services_pkg
 
-from hermes.config import config
+from hermes.config import config  # noqa: E402
 db = importlib.import_module("hermes.services.db")
 reminders = importlib.import_module("hermes.services.reminders")
 

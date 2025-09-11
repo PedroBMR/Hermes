@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import patch
 
-import requests
 import tests.requests_stub  # noqa: F401
 
 from hermes.services.llm_interface import gerar_resposta

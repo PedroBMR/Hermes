@@ -74,9 +74,9 @@ sys.modules.setdefault("sklearn.feature_extraction.text", text)
 sys.modules.setdefault("sklearn.metrics", metrics)
 sys.modules.setdefault("sklearn.metrics.pairwise", pairwise)
 
-from hermes.services.semantic_search import semantic_search
-from hermes.services import db as dao
-from hermes.data import database
+from hermes.services.semantic_search import semantic_search  # noqa: E402
+from hermes.services import db as dao  # noqa: E402
+from hermes.data import database  # noqa: E402
 
 
 @pytest.fixture
