@@ -1,15 +1,15 @@
 import csv
 import json
 import sys
-import pyttsx3
 
+import pyttsx3
 import sounddevice as sd
 import vosk
-
 from PyQt5.QtWidgets import (
     QApplication,
     QComboBox,
     QFileDialog,
+    QHBoxLayout,
     QInputDialog,
     QLabel,
     QLineEdit,
@@ -17,7 +17,6 @@ from PyQt5.QtWidgets import (
     QListWidgetItem,
     QMessageBox,
     QPushButton,
-    QHBoxLayout,
     QTextEdit,
     QVBoxLayout,
     QWidget,

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import os
 import time
-from fastapi import FastAPI, HTTPException, Request, Depends, Header
+
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
 
 from .config import config
 from .services.db import add_idea, init_db
 from .services.llm_interface import gerar_resposta
 from .services.reminders import start_scheduler
-
 
 app = FastAPI()
 
