@@ -11,6 +11,7 @@ sys.modules.setdefault(
     "hermes.services.llm_interface", types.ModuleType("llm_interface")
 )
 
+
 # Provide minimal sklearn stubs so semantic_search can be imported without the
 # real scikit-learn dependency.
 class _Array(list):

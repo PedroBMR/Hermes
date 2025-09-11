@@ -122,4 +122,3 @@ def semantic_search(
 
 
 __all__ = ["semantic_search", "VectorIndex", "TfidfVectorIndex"]
-

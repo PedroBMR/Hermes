@@ -18,7 +18,7 @@ def test_migrate_to_v2_preserves_rows_and_adds_columns(tmp_path):
         )
         conn.execute(
             "INSERT INTO ideias (usuario_id, texto, data) VALUES (?, ?, ?)",
-            (1, "old", "2023-01-01")
+            (1, "old", "2023-01-01"),
         )
     migrate_to_v2(str(db_file))
     with sqlite3.connect(db_file) as conn:

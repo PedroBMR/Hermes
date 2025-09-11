@@ -44,7 +44,9 @@ def ask_and_speak(cfg):
     prompt = input("Prompt to ask the server (leave empty to skip): ")
     if not prompt:
         return
-    resp = requests.post(f"{server}/ask", json={"prompt": prompt}, headers=headers, timeout=30)
+    resp = requests.post(
+        f"{server}/ask", json={"prompt": prompt}, headers=headers, timeout=30
+    )
     resp.raise_for_status()
     answer = resp.json().get("response", "")
     if not answer:

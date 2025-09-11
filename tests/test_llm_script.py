@@ -16,7 +16,8 @@ class TestarLLM(unittest.TestCase):
 
         resultado = gerar_resposta(
             "Explique brevemente o que é inteligência artificial.",
-            url="http://fake", model="fake",
+            url="http://fake",
+            model="fake",
         )
         assert resultado["ok"] is True
         assert (
@@ -27,4 +28,3 @@ class TestarLLM(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

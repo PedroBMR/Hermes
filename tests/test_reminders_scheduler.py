@@ -26,31 +26,29 @@ class DummyScheduler:
 
 
 # Stub external dependencies
-sys.modules['requests.adapters'] = types.ModuleType('requests.adapters')
-sys.modules['requests.adapters'].HTTPAdapter = object
-sys.modules['urllib3'] = types.ModuleType('urllib3')
-sys.modules['urllib3.util'] = types.ModuleType('urllib3.util')
-sys.modules['urllib3.util.retry'] = types.ModuleType('urllib3.util.retry')
-sys.modules['urllib3.util.retry'].Retry = object
+sys.modules["requests.adapters"] = types.ModuleType("requests.adapters")
+sys.modules["requests.adapters"].HTTPAdapter = object
+sys.modules["urllib3"] = types.ModuleType("urllib3")
+sys.modules["urllib3.util"] = types.ModuleType("urllib3.util")
+sys.modules["urllib3.util.retry"] = types.ModuleType("urllib3.util.retry")
+sys.modules["urllib3.util.retry"].Retry = object
 
 background = types.ModuleType("apscheduler.schedulers.background")
 background.BackgroundScheduler = DummyScheduler
 sys.modules.setdefault("apscheduler", types.ModuleType("apscheduler"))
-sys.modules.setdefault("apscheduler.schedulers", types.ModuleType("apscheduler.schedulers"))
+sys.modules.setdefault(
+    "apscheduler.schedulers", types.ModuleType("apscheduler.schedulers")
+)
 sys.modules["apscheduler.schedulers.background"] = background
 
 services_pkg = types.ModuleType("hermes.services")
 services_pkg.__path__ = [
-    str(
-        pathlib.Path(__file__).resolve().parent.parent
-        / "src"
-        / "hermes"
-        / "services"
-    )
+    str(pathlib.Path(__file__).resolve().parent.parent / "src" / "hermes" / "services")
 ]
 sys.modules["hermes.services"] = services_pkg
 
 from hermes.config import config  # noqa: E402
+
 db = importlib.import_module("hermes.services.db")
 reminders = importlib.import_module("hermes.services.reminders")
 
