@@ -214,9 +214,7 @@ def search_ideas(
         params.append(f"%{topic}%")
     if tag:
         # Look for tag inside comma-separated list
-        conditions.append(
-            "INSTR(',' || IFNULL(tags, '') || ',', ',' || ? || ',') > 0"
-        )
+        conditions.append("INSTR(',' || IFNULL(tags, '') || ',', ',' || ? || ',') > 0")
         params.append(tag)
 
     query = (
@@ -257,9 +255,7 @@ def list_reminders(user_id: int, only_pending: bool = False) -> list[dict]:
     if only_pending:
         conditions.append("triggered_at IS NULL")
 
-    query = (
-        "SELECT id, user_id, message, trigger_at, triggered_at FROM reminders"
-    )
+    query = "SELECT id, user_id, message, trigger_at, triggered_at FROM reminders"
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
     query += " ORDER BY datetime(trigger_at) ASC"

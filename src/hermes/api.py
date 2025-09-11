@@ -15,6 +15,7 @@ app = FastAPI()
 
 # --- Auth -----------------------------------------------------------------
 
+
 def verify_token(x_token: str = Header(...)) -> None:
     expected = config.API_TOKEN
     if not expected or x_token != expected:
@@ -43,6 +44,7 @@ async def rate_limiter(request: Request, call_next):
 
 # --- Models ----------------------------------------------------------------
 
+
 class Idea(BaseModel):
     user: int
     title: str
@@ -55,6 +57,7 @@ class Prompt(BaseModel):
 
 # --- Startup ---------------------------------------------------------------
 
+
 @app.on_event("startup")
 def _startup() -> None:
     init_db()
@@ -62,6 +65,7 @@ def _startup() -> None:
 
 
 # --- Endpoints -------------------------------------------------------------
+
 
 @app.get("/health")
 def health() -> dict[str, str]:

@@ -56,7 +56,7 @@ def test_list_ideas_orders_by_created_at(setup_db):
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             "UPDATE ideias SET created_at = '2000-01-01T00:00:00' WHERE id = ?",
-            (first,)
+            (first,),
         )
     ideas = dao.list_ideas(user_id)
     assert [idea["id"] for idea in ideas] == [second, first]

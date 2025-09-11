@@ -5,6 +5,7 @@ import sys
 import pyttsx3
 import sounddevice as sd
 import vosk
+
 from PyQt5.QtCore import QFutureWatcher, QtConcurrent
 from PyQt5.QtWidgets import (
     QApplication,

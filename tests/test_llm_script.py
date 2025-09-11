@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import requests
 
+
 import tests.requests_stub  # noqa: F401
 from hermes.services.llm_interface import gerar_resposta
 from tests.test_llm_interface import _make_response
@@ -17,7 +18,8 @@ class TestarLLM(unittest.TestCase):
 
         resultado = gerar_resposta(
             "Explique brevemente o que é inteligência artificial.",
-            url="http://fake", model="fake",
+            url="http://fake",
+            model="fake",
         )
         assert resultado["ok"] is True
         assert (
@@ -28,4 +30,3 @@ class TestarLLM(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

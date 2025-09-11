@@ -11,6 +11,7 @@ sys.modules.setdefault(
     "hermes.services.llm_interface", types.ModuleType("llm_interface")
 )
 
+
 # Provide minimal sklearn stubs so semantic_search can be imported without the
 # real scikit-learn dependency.
 class _Array(list):
@@ -74,9 +75,11 @@ sys.modules.setdefault("sklearn.feature_extraction.text", text)
 sys.modules.setdefault("sklearn.metrics", metrics)
 sys.modules.setdefault("sklearn.metrics.pairwise", pairwise)
 
-from hermes.data import database
-from hermes.services import db as dao
-from hermes.services.semantic_search import semantic_search
+
+from hermes.data import database  # noqa: E402
+from hermes.services import db as dao  # noqa: E402
+from hermes.services.semantic_search import semantic_search  # noqa: E402
+
 
 
 @pytest.fixture

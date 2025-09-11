@@ -47,8 +47,6 @@ def test_ask_returns_response(api_client, monkeypatch):
         return {"ok": True, "response": "hi"}
 
     monkeypatch.setattr(api_module, "gerar_resposta", fake)
-    res = client.post(
-        "/ask", json={"prompt": "hello"}, headers={"X-Token": "secret"}
-    )
+    res = client.post("/ask", json={"prompt": "hello"}, headers={"X-Token": "secret"})
     assert res.status_code == 200
     assert res.json() == {"response": "hi"}

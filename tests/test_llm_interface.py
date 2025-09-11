@@ -20,8 +20,9 @@ class TestGerarResposta(unittest.TestCase):
     def test_resposta_sucesso(self, mock_send):
         mock_send.return_value = _make_response({"response": "ok"})
 
-        with patch.object(llm_interface.config, "MAX_RETRIES", 1), patch.object(
-            llm_interface.config, "BACKOFF_FACTOR", 0
+        with (
+            patch.object(llm_interface.config, "MAX_RETRIES", 1),
+            patch.object(llm_interface.config, "BACKOFF_FACTOR", 0),
         ):
             result = llm_interface.gerar_resposta(
                 "Oi?", url="http://test", model="fake"
@@ -33,8 +34,9 @@ class TestGerarResposta(unittest.TestCase):
     def test_falha_conexao(self, mock_send):
         mock_send.side_effect = requests.exceptions.ConnectionError("falha")
 
-        with patch.object(llm_interface.config, "MAX_RETRIES", 1), patch.object(
-            llm_interface.config, "BACKOFF_FACTOR", 0
+        with (
+            patch.object(llm_interface.config, "MAX_RETRIES", 1),
+            patch.object(llm_interface.config, "BACKOFF_FACTOR", 0),
         ):
             result = llm_interface.gerar_resposta(
                 "Oi?", url="http://test", model="fake"
@@ -47,8 +49,9 @@ class TestGerarResposta(unittest.TestCase):
     def test_timeout(self, mock_send):
         mock_send.side_effect = requests.exceptions.Timeout("timeout")
 
-        with patch.object(llm_interface.config, "MAX_RETRIES", 1), patch.object(
-            llm_interface.config, "BACKOFF_FACTOR", 0
+        with (
+            patch.object(llm_interface.config, "MAX_RETRIES", 1),
+            patch.object(llm_interface.config, "BACKOFF_FACTOR", 0),
         ):
             result = llm_interface.gerar_resposta(
                 "Oi?", url="http://test", model="fake"
@@ -61,8 +64,9 @@ class TestGerarResposta(unittest.TestCase):
     def test_resposta_inesperada(self, mock_send):
         mock_send.return_value = _make_response({"foo": "bar"})
 
-        with patch.object(llm_interface.config, "MAX_RETRIES", 1), patch.object(
-            llm_interface.config, "BACKOFF_FACTOR", 0
+        with (
+            patch.object(llm_interface.config, "MAX_RETRIES", 1),
+            patch.object(llm_interface.config, "BACKOFF_FACTOR", 0),
         ):
             result = llm_interface.gerar_resposta(
                 "Oi?", url="http://test", model="fake"
@@ -75,8 +79,9 @@ class TestGerarResposta(unittest.TestCase):
     def test_retry(self, mock_mount, mock_post):
         mock_post.return_value = _make_response({"response": "ok"})
 
-        with patch.object(llm_interface.config, "MAX_RETRIES", 7), patch.object(
-            llm_interface.config, "BACKOFF_FACTOR", 0.3
+        with (
+            patch.object(llm_interface.config, "MAX_RETRIES", 7),
+            patch.object(llm_interface.config, "BACKOFF_FACTOR", 0.3),
         ):
             result = llm_interface.gerar_resposta(
                 "Oi?", url="http://test", model="fake"
@@ -89,4 +94,3 @@ class TestGerarResposta(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

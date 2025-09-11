@@ -7,6 +7,7 @@ from .migrate import migrate_to_v2
 # value provided by :mod:`hermes.config`.
 DB_PATH = config.DB_PATH
 
+
 def inicializar_banco():
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
@@ -54,6 +55,7 @@ def inicializar_banco():
 
     migrate_to_v2(DB_PATH)
 
+
 def criar_usuario(nome, tipo, voz_id=None):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
@@ -62,11 +64,13 @@ def criar_usuario(nome, tipo, voz_id=None):
             (nome, tipo, voz_id),
         )
 
+
 def buscar_usuarios():
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id, nome, tipo FROM usuarios")
         return cursor.fetchall()
+
 
 def salvar_ideia(
     user_id,
@@ -93,6 +97,7 @@ def salvar_ideia(
             """,
             (user_id, title, body, source, llm_summary, llm_topic, tags),
         )
+
 
 def listar_ideias(user_id):
     with sqlite3.connect(DB_PATH) as conn:

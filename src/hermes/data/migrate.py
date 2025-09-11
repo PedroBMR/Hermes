@@ -46,7 +46,9 @@ def migrate_to_v2(db_path: str) -> None:
 def main(argv: Sequence[str] | None = None) -> None:
     """Command-line entry point to run the migration manually."""
     parser = argparse.ArgumentParser(description="Migrate Hermes DB to v2 schema")
-    parser.add_argument("--db-path", default=config.DB_PATH, help="Path to the SQLite DB")
+    parser.add_argument(
+        "--db-path", default=config.DB_PATH, help="Path to the SQLite DB"
+    )
     args = parser.parse_args(argv)
     migrate_to_v2(args.db_path)
 
