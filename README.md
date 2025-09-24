@@ -3,7 +3,6 @@
 Assistente pessoal modular, privado e offline com múltiplos usuários, interface visual, entrada por voz/texto e integração com LLM local.
 
 > 📘 Precisa de um passo a passo para iniciantes? Confira o [tutorial completo](docs/tutorial_iniciante.md).
-> 🚀 Quer aprender os fluxos do dia a dia? Siga o [guia de uso](docs/tutorial_uso.md).
 
 ## Instalação
 

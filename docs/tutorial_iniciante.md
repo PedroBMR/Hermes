@@ -240,7 +240,6 @@ Passe os argumentos ao executar `python -m hermes` ou `python -m hermes.ui.cli`.
 ## 13. Próximos passos
 
 - Explore a busca semântica: `python -m hermes.ui.cli` → opção **Pesquisar ideias**.
-- Leia o [tutorial de uso](tutorial_uso.md) para dominar a CLI, a interface gráfica e a API no dia a dia.
 - Integre com outros sistemas via API (`python -m hermes.api`).
 - Automatize backups do arquivo `hermes.db` para não perder suas ideias.
 
