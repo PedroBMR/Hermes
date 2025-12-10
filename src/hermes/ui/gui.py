@@ -24,8 +24,7 @@ from PyQt5.QtWidgets import (
 )
 
 from ..core.registro_ideias import analisar_ideia_com_llm, registrar_ideia_com_llm
-from ..data.database import buscar_usuarios, criar_usuario
-from ..services.db import add_idea, list_ideas, search_ideas, update_idea
+from ..services.db import add_idea, add_user, list_ideas, list_users, search_ideas, update_idea
 from ..services.reminders import start_scheduler
 
 
@@ -120,13 +119,11 @@ class HermesGUI(QWidget):
         self.user_combo.clear()
         self.search_user_combo.clear()
         self.search_user_combo.addItem("Todos", None)
-        usuarios = buscar_usuarios()
-        self.usuarios_map = {}
-        for uid, nome, tipo in usuarios:
-            display = f"{nome} ({tipo})"
-            self.user_combo.addItem(display)
-            self.search_user_combo.addItem(display, uid)
-            self.usuarios_map[display] = uid
+        usuarios = list_users()
+        for usuario in usuarios:
+            display = f"{usuario['name']} ({usuario['kind']})"
+            self.user_combo.addItem(display, usuario["id"])
+            self.search_user_combo.addItem(display, usuario["id"])
         if usuarios:
             self.user_combo.blockSignals(True)
             self.user_combo.setCurrentIndex(0)
@@ -136,15 +133,14 @@ class HermesGUI(QWidget):
             self.idea_list.clear()
 
     def salvar_ideia(self):
-        usuario_display = self.user_combo.currentText()
+        usuario_id = self.user_combo.currentData()
         titulo = self.title_input.text().strip()
         descricao = self.desc_input.toPlainText().strip()
 
-        if not usuario_display or not titulo or not descricao:
+        if not usuario_id or not titulo or not descricao:
             QMessageBox.warning(self, "Erro", "Preencha todos os campos.")
             return
 
-        usuario_id = self.usuarios_map.get(usuario_display)
         ideia_salva = False
         try:
             sugestoes = registrar_ideia_com_llm(usuario_id, titulo, descricao)
@@ -217,8 +213,7 @@ class HermesGUI(QWidget):
         self._atualizar_botao_processar()
 
     def listar_ideias(self):
-        usuario_display = self.user_combo.currentText()
-        usuario_id = self.usuarios_map.get(usuario_display)
+        usuario_id = self.user_combo.currentData()
         self.idea_list.clear()
         if not usuario_id:
             return
@@ -297,10 +292,9 @@ class HermesGUI(QWidget):
         tipo, ok = QInputDialog.getText(self, "Novo Usuário", "Tipo do usuário:")
         if not ok or not tipo.strip():
             return
-        criar_usuario(nome.strip(), tipo.strip())
+        user_id = add_user(nome.strip(), tipo.strip())
         self.carregar_usuarios()
-        display = f"{nome.strip()} ({tipo.strip()})"
-        idx = self.user_combo.findText(display)
+        idx = self.user_combo.findData(user_id)
         if idx != -1:
             self.user_combo.setCurrentIndex(idx)
 

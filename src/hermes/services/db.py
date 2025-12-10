@@ -34,8 +34,17 @@ def _dicts(cursor: sqlite3.Cursor, rows: Iterable[sqlite3.Row]) -> list[dict]:
     return [dict(row) for row in rows]
 
 
-def init_db() -> None:
-    """Create database tables if they do not exist and run migrations."""
+def init_db(db_path: str | None = None) -> None:
+    """Create database tables if they do not exist and run migrations.
+
+    When ``db_path`` is provided, it becomes the active database path for
+    subsequent DAO operations. Otherwise, the default from
+    :mod:`hermes.config` is used.
+    """
+
+    global DB_PATH
+    if db_path:
+        DB_PATH = db_path
 
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
@@ -96,6 +105,12 @@ def add_user(name: str, kind: str, voice_id: str | None = None) -> int:
         return int(cursor.lastrowid)
 
 
+def create_user(name: str, kind: str, voice_id: str | None = None) -> int:
+    """Compatibility alias for :func:`add_user`."""
+
+    return add_user(name, kind, voice_id)
+
+
 def list_users() -> list[dict]:
     """Return all users as a list of dictionaries."""
 
@@ -136,6 +151,20 @@ def add_idea(
             (user_id, title, body, source, llm_summary, llm_topic, tags),
         )
         return int(cursor.lastrowid)
+
+
+def save_idea(
+    user_id: int,
+    title: str,
+    body: str,
+    source: str | None = None,
+    llm_summary: str | None = None,
+    llm_topic: str | None = None,
+    tags: str | None = None,
+) -> int:
+    """Compatibility alias for :func:`add_idea`."""
+
+    return add_idea(user_id, title, body, source, llm_summary, llm_topic, tags)
 
 
 def update_idea(idea_id: int, **fields: Any) -> None:
