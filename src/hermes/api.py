@@ -7,9 +7,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
 
 from .config import config
-from .services.db import add_idea, init_db
-from .services.llm_interface import gerar_resposta
-from .services.reminders import start_scheduler
+from .core import app as core_app
 
 app = FastAPI()
 
@@ -57,8 +55,7 @@ class Prompt(BaseModel):
 
 @app.on_event("startup")
 def _startup() -> None:
-    init_db()
-    start_scheduler()
+    core_app.inicializar()
 
 
 # --- Endpoints -------------------------------------------------------------
@@ -76,15 +73,18 @@ def create_idea(
 ) -> dict[str, int | str]:
     device_id = request.headers.get("X-Device-Id", "")
     source = f"caduceu_{device_id}" if device_id else "caduceu_"
-    idea_id = add_idea(idea.user, idea.title, idea.body, source=source)
-    return {"id": idea_id, "source": source}
+    result = core_app.registrar_ideia(
+        idea.user, idea.title, idea.body, usar_llm=False, source=source
+    )
+    return {"id": result["id"], "source": source}
 
 
 @app.post("/ask")
 def ask(prompt: Prompt, _: None = Depends(verify_token)) -> dict[str, str]:
-    result = gerar_resposta(prompt.prompt)
-    if not result.get("ok"):
-        raise HTTPException(status_code=502, detail=result.get("message", "error"))
+    try:
+        result = core_app.responder_prompt(prompt.prompt)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
     return {"response": result["response"]}
 
 
