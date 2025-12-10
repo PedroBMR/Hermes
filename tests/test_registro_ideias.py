@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from hermes.core.registro_ideias import (
@@ -24,6 +25,10 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
                 },
             ) as mock_llm,
             patch("hermes.core.registro_ideias.add_idea") as mock_add,
+            patch(
+                "hermes.core.registro_ideias.PROMPT_PATH",
+                Path(__file__).resolve().parents[1] / "prompts" / "resumo_classificar.md",
+            ),
             patch("builtins.print"),
         ):
             resposta = registrar_ideia_com_llm(
@@ -59,6 +64,10 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
                 return_value={"ok": False, "message": "erro"},
             ) as mock_llm,
             patch("hermes.core.registro_ideias.add_idea") as mock_add,
+            patch(
+                "hermes.core.registro_ideias.PROMPT_PATH",
+                Path(__file__).resolve().parents[1] / "prompts" / "resumo_classificar.md",
+            ),
             patch("builtins.print"),
         ):
             with self.assertRaises(RuntimeError):
