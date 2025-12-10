@@ -6,6 +6,11 @@ from ..config import load_from_args
 from ..core import app
 from ..logging import setup_logging
 
+LLM_FRIENDLY_MESSAGE = (
+    "Não consegui falar com o modelo de linguagem. Verifique se o servidor está"
+    " rodando em localhost:11434 e tente novamente."
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -80,7 +85,8 @@ def menu_principal(usuario_id, nome_usuario):
                 logger.info("Sugestões do modelo:")
                 logger.info("%s", resultado.get("llm_response"))
             except RuntimeError as e:
-                logger.error("⚠️ %s", e)
+                mensagem = str(e) or LLM_FRIENDLY_MESSAGE
+                logger.error("⚠️ %s", mensagem)
                 if (
                     input("Deseja salvar a ideia mesmo assim? (s/N): ").strip().lower()
                     == "s"

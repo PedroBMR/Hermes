@@ -27,6 +27,11 @@ from ..core.registro_ideias import analisar_ideia_com_llm, registrar_ideia_com_l
 from ..services.db import add_idea, add_user, list_ideas, list_users, search_ideas, update_idea
 from ..services.reminders import start_scheduler
 
+LLM_FRIENDLY_MESSAGE = (
+    "Não consegui falar com o modelo de linguagem. Verifique se o servidor está"
+    " rodando em localhost:11434 e tente novamente."
+)
+
 
 class HermesGUI(QWidget):
     def __init__(self):
@@ -151,10 +156,11 @@ class HermesGUI(QWidget):
             )
             ideia_salva = True
         except RuntimeError as e:
+            mensagem = str(e) or LLM_FRIENDLY_MESSAGE
             opcao = QMessageBox.question(
                 self,
                 "Erro",
-                f"{e}\n\nDeseja salvar a ideia mesmo assim?",
+                f"{mensagem}\n\nDeseja salvar a ideia mesmo assim?",
                 QMessageBox.Yes | QMessageBox.No,
             )
             if opcao == QMessageBox.Yes:
@@ -282,6 +288,8 @@ class HermesGUI(QWidget):
             ideia["llm_summary"] = sugestoes["llm_summary"]
             ideia["llm_topic"] = sugestoes["llm_topic"]
             item.setData(1000, ideia)
+        except RuntimeError as e:  # pragma: no cover - interface gráfica
+            QMessageBox.warning(self, "Erro", str(e) or LLM_FRIENDLY_MESSAGE)
         except Exception as e:  # pragma: no cover - interface gráfica
             QMessageBox.warning(self, "Erro", str(e))
 

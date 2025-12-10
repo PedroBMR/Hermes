@@ -36,12 +36,9 @@ class TestGerarResposta(unittest.TestCase):
         with patch.object(llm_interface.config, "MAX_RETRIES", 1), patch.object(
             llm_interface.config, "BACKOFF_FACTOR", 0
         ):
-            result = llm_interface.gerar_resposta(
-                "Oi?", url="http://test", model="fake"
-            )
-        self.assertFalse(result["ok"])
-        self.assertEqual(result["error"], "ConnectionError")
-        self.assertEqual(result["message"], "Servidor LLM offline")
+            with self.assertRaises(llm_interface.LLMError) as excinfo:
+                llm_interface.gerar_resposta("Oi?", url="http://test", model="fake")
+        self.assertEqual(excinfo.exception.code, "ConnectionError")
 
     @patch("requests.adapters.HTTPAdapter.send")
     def test_timeout(self, mock_send):
@@ -50,12 +47,9 @@ class TestGerarResposta(unittest.TestCase):
         with patch.object(llm_interface.config, "MAX_RETRIES", 1), patch.object(
             llm_interface.config, "BACKOFF_FACTOR", 0
         ):
-            result = llm_interface.gerar_resposta(
-                "Oi?", url="http://test", model="fake"
-            )
-        self.assertFalse(result["ok"])
-        self.assertEqual(result["error"], "Timeout")
-        self.assertEqual(result["message"], "Servidor LLM não respondeu a tempo")
+            with self.assertRaises(llm_interface.LLMError) as excinfo:
+                llm_interface.gerar_resposta("Oi?", url="http://test", model="fake")
+        self.assertEqual(excinfo.exception.code, "Timeout")
 
     @patch("requests.adapters.HTTPAdapter.send")
     def test_resposta_inesperada(self, mock_send):
@@ -64,11 +58,9 @@ class TestGerarResposta(unittest.TestCase):
         with patch.object(llm_interface.config, "MAX_RETRIES", 1), patch.object(
             llm_interface.config, "BACKOFF_FACTOR", 0
         ):
-            result = llm_interface.gerar_resposta(
-                "Oi?", url="http://test", model="fake"
-            )
-        self.assertFalse(result["ok"])
-        self.assertEqual(result["error"], "missing_response")
+            with self.assertRaises(llm_interface.LLMError) as excinfo:
+                llm_interface.gerar_resposta("Oi?", url="http://test", model="fake")
+        self.assertEqual(excinfo.exception.code, "missing_response")
 
     @patch("requests.Session.post")
     @patch("requests.Session.mount")
