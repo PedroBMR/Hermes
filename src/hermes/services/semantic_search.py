@@ -16,7 +16,7 @@ from typing import Iterable, List, Protocol, Tuple
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from .db import list_ideas, search_ideas
+from .db import search_ideas
 
 
 class VectorIndex(Protocol):
@@ -82,7 +82,7 @@ def _idea_to_text(idea: dict) -> str:
 
 def semantic_search(
     query: str,
-    user_id: int | None = None,
+    user_id: int,
     limit: int = 10,
     index: VectorIndex | None = None,
 ) -> list[dict]:
@@ -92,8 +92,8 @@ def semantic_search(
     ----------
     query: str
         Text to search for.
-    user_id: int | None, optional
-        If provided, restrict search to ideas from this user.
+    user_id: int
+        Restrict search to ideas from this user.
     limit: int, default ``10``
         Maximum number of ideas to return.
     index: VectorIndex | None, optional
@@ -106,7 +106,10 @@ def semantic_search(
         Idea dictionaries ordered by semantic similarity.
     """
 
-    ideas = list_ideas(user_id) if user_id is not None else search_ideas()
+    if user_id is None:
+        raise ValueError("user_id is required for semantic_search")
+
+    ideas = search_ideas(user_id)
     if not ideas:
         return []
 

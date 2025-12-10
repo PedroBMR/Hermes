@@ -170,7 +170,7 @@ from hermes.services.semantic_search import semantic_search, VectorIndex
 class MeuIndice(VectorIndex):
     ...  # implemente fit() e search()
 
-resultado = semantic_search("kanban", index=MeuIndice())
+resultado = semantic_search("kanban", user_id=1, index=MeuIndice())
 ```
 
 ### Reminders

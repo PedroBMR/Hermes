@@ -68,14 +68,14 @@ def test_search_ideas_filters(setup_db):
     other_user = dao.add_user("Bob", "tipo")
     third = dao.add_idea(other_user, "Other", "body", llm_topic="ai", tags="tech")
 
-    res = dao.search_ideas(text="AI")
+    res = dao.search_ideas(user_id=user_id, text="AI")
     assert [r["id"] for r in res] == [first]
 
-    res = dao.search_ideas(topic="music")
+    res = dao.search_ideas(user_id=user_id, topic="music")
     assert [r["id"] for r in res] == [second]
 
-    res = dao.search_ideas(tag="tech")
-    assert {r["id"] for r in res} == {first, third}
+    res = dao.search_ideas(user_id=user_id, tag="tech")
+    assert {r["id"] for r in res} == {first}
 
     res = dao.search_ideas(user_id=user_id)
     assert {r["id"] for r in res} == {first, second}
