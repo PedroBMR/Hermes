@@ -3,31 +3,20 @@ import sys
 from datetime import datetime, timedelta
 
 from ..config import load_from_args
-from ..core.registro_ideias import registrar_ideia_com_llm
+from ..core import app
 from ..logging import setup_logging
-from ..services import semantic_search
-from ..services.db import (
-    add_idea,
-    add_reminder,
-    add_user,
-    init_db,
-    list_ideas,
-    list_reminders,
-    list_users,
-)
-from ..services.reminders import load_pending_reminders, start_scheduler
 
 logger = logging.getLogger(__name__)
 
 
 def escolher_usuario():
-    usuarios = list_users()
+    usuarios = app.listar_usuarios()
     if not usuarios:
         logger.info("Nenhum usuário encontrado. Crie um agora.")
         nome = input("Nome do novo usuário: ")
         tipo = input("Tipo (Masculino/Feminino): ")
-        add_user(nome, tipo)
-        usuarios = list_users()
+        app.criar_usuario(nome, tipo)
+        usuarios = app.listar_usuarios()
 
     logger.info("\nUsuários disponíveis:")
     for usuario in usuarios:
@@ -84,22 +73,24 @@ def menu_principal(usuario_id, nome_usuario):
             titulo = input("Título da ideia: ")
             descricao = input("Descrição da ideia: ")
             try:
-                sugestoes = registrar_ideia_com_llm(usuario_id, titulo, descricao)
+                resultado = app.registrar_ideia(
+                    usuario_id, titulo, descricao, usar_llm=True
+                )
                 logger.info("✅ Ideia registrada.")
                 logger.info("Sugestões do modelo:")
-                logger.info("%s", sugestoes)
+                logger.info("%s", resultado.get("llm_response"))
             except RuntimeError as e:
                 logger.error("⚠️ %s", e)
                 if (
                     input("Deseja salvar a ideia mesmo assim? (s/N): ").strip().lower()
                     == "s"
                 ):
-                    add_idea(usuario_id, titulo, descricao)
+                    app.registrar_ideia(usuario_id, titulo, descricao, usar_llm=False)
                     logger.info("✅ Ideia registrada sem sugestões.")
                 else:
                     logger.info("❌ Ideia não registrada.")
         elif opcao == "2":
-            ideias = list_ideas(usuario_id)
+            ideias = app.listar_ideias(usuario_id)
             if ideias:
                 logger.info("\nMinhas ideias:")
                 for ideia in ideias:
@@ -113,7 +104,7 @@ def menu_principal(usuario_id, nome_usuario):
                 logger.info("Nenhuma ideia registrada.")
         elif opcao == "3":
             termo = input("Texto de busca: ")
-            resultados = semantic_search(termo, user_id=usuario_id)
+            resultados = app.buscar_ideias_semanticas(usuario_id, termo)
             if resultados:
                 logger.info("\nResultados da busca:")
                 for ideia in resultados:
@@ -133,11 +124,10 @@ def menu_principal(usuario_id, nome_usuario):
             except ValueError:
                 logger.error("Formato de tempo inválido.")
                 continue
-            add_reminder(usuario_id, mensagem, trigger_at)
-            load_pending_reminders()
+            app.criar_lembrete(usuario_id, mensagem, trigger_at)
             logger.info("✅ Lembrete agendado para %s.", trigger_at)
         elif opcao == "5":
-            lembretes = list_reminders(usuario_id)
+            lembretes = app.listar_lembretes(usuario_id)
             pendentes = [r for r in lembretes if r["triggered_at"] is None]
             disparados = [r for r in lembretes if r["triggered_at"] is not None]
             if pendentes:
@@ -164,12 +154,11 @@ def menu_principal(usuario_id, nome_usuario):
 def main(argv: list[str] | None = None):
     setup_logging()
     load_from_args(argv)
-    init_db()
-    start_scheduler()
+    app.inicializar()
     while True:
         usuario_id = escolher_usuario()
         nome_usuario = next(
-            (u["name"] for u in list_users() if u["id"] == usuario_id),
+            (u["name"] for u in app.listar_usuarios() if u["id"] == usuario_id),
             "Desconhecido",
         )
         if not menu_principal(usuario_id, nome_usuario):
