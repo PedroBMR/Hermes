@@ -215,23 +215,20 @@ def list_ideas(user_id: int) -> list[dict]:
 
 
 def search_ideas(
-    user_id: int | None = None,
+    user_id: int,
     text: str | None = None,
     topic: str | None = None,
     tag: str | None = None,
 ) -> list[dict]:
     """Search ideas using simple ``LIKE``/``INSTR`` filters.
 
-    Parameters are optional and combined using ``AND`` when provided. The
-    returned list is ordered by ``created_at`` descending.
+    Parameters are optional and combined using ``AND`` when provided. Results
+    are always scoped to ``user_id`` and ordered by ``created_at`` descending.
     """
 
-    conditions = []
-    params: list[Any] = []
+    conditions = ["user_id = ?"]
+    params: list[Any] = [user_id]
 
-    if user_id is not None:
-        conditions.append("user_id = ?")
-        params.append(user_id)
     if text:
         like = f"%{text}%"
         conditions.append(

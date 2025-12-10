@@ -103,8 +103,11 @@ def sample_ideas(tmp_path, monkeypatch):
 
 
 def test_semantic_search_returns_relevant_idea(sample_ideas):
-    results = semantic_search("kanban conims")
+    user1 = sample_ideas["user1"]
+
+    results = semantic_search("kanban conims", user_id=user1)
     assert results
+    assert all(r["user_id"] == user1 for r in results)
     assert "kanban columns" in results[0]["body"].lower()
 
 
@@ -121,3 +124,8 @@ def test_semantic_search_filters_by_user(sample_ideas):
     assert len(res2) == 1
     assert res2[0]["user_id"] == user2
     assert "kanban columns" in res2[0]["body"].lower()
+
+
+def test_semantic_search_requires_user(sample_ideas):
+    with pytest.raises(ValueError):
+        semantic_search("kanban conims", user_id=None)
