@@ -13,6 +13,14 @@ from ..config import config
 logger = logging.getLogger(__name__)
 
 
+class LLMError(RuntimeError):
+    """Erro de comunicação com o modelo de linguagem."""
+
+    def __init__(self, message: str, *, code: str | None = None):
+        super().__init__(message)
+        self.code = code
+
+
 def gerar_resposta(
     prompt: str,
     url: str | None = None,
@@ -51,6 +59,11 @@ def gerar_resposta(
     session.mount("http://", adapter)
     session.mount("https://", adapter)
 
+    friendly_message = (
+        "Não consegui falar com o modelo de linguagem. Verifique se o servidor"
+        " está rodando em localhost:11434 e tente novamente."
+    )
+
     try:
         response = session.post(
             url,
@@ -61,39 +74,19 @@ def gerar_resposta(
         dados = response.json()
         resposta = dados.get("response")
         if resposta is None:
-            return {
-                "ok": False,
-                "error": "missing_response",
-                "message": "Sem resposta do modelo",
-            }
+            raise LLMError("Sem resposta do modelo", code="missing_response")
         return {"ok": True, "response": resposta.strip()}
     except requests.exceptions.Timeout as exc:
         logger.exception("Servidor LLM não respondeu a tempo: %s", exc)
-        return {
-            "ok": False,
-            "error": "Timeout",
-            "message": "Servidor LLM não respondeu a tempo",
-        }
+        raise LLMError(friendly_message, code="Timeout") from exc
     except requests.exceptions.ConnectionError as exc:
         logger.exception("Servidor LLM offline: %s", exc)
-        return {
-            "ok": False,
-            "error": "ConnectionError",
-            "message": "Servidor LLM offline",
-        }
+        raise LLMError(friendly_message, code="ConnectionError") from exc
     except requests.exceptions.RequestException as exc:
         logger.exception("Erro ao comunicar com o servidor LLM: %s", exc)
-        return {
-            "ok": False,
-            "error": exc.__class__.__name__,
-            "message": str(exc),
-        }
+        raise LLMError(friendly_message, code=exc.__class__.__name__) from exc
     except JSONDecodeError as exc:
         logger.exception("Resposta inválida do servidor LLM: %s", exc)
-        return {
-            "ok": False,
-            "error": "JSONDecodeError",
-            "message": str(exc),
-        }
+        raise LLMError("Resposta inválida do servidor LLM", code="JSONDecodeError") from exc
     finally:
         session.close()

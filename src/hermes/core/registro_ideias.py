@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from ..services.db import add_idea
-from ..services.llm_interface import gerar_resposta
+from ..services.llm_interface import LLMError, gerar_resposta
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +51,12 @@ def analisar_ideia_com_llm(
     template = carregar_prompt()
     prompt = template.format(titulo=titulo, descricao=descricao)
 
-    resultado = gerar_resposta(prompt, url=url, model=model)
-    if not resultado.get("ok", False):
+    try:
+        resultado = gerar_resposta(prompt, url=url, model=model)
+    except LLMError as exc:
+        raise RuntimeError(str(exc)) from exc
+
+    if not resultado.get("ok", True):
         raise RuntimeError(resultado.get("message", "Erro desconhecido"))
 
     resposta = resultado["response"]

@@ -15,7 +15,7 @@ from ..services.db import (
     list_reminders,
     list_users,
 )
-from ..services.llm_interface import gerar_resposta
+from ..services.llm_interface import LLMError, gerar_resposta
 from .registro_ideias import analisar_ideia_com_llm
 
 logger = logging.getLogger(__name__)
@@ -105,8 +105,12 @@ def listar_lembretes(user_id: int, apenas_pendentes: bool = False) -> list[dict]
 def responder_prompt(prompt: str, *, url: str | None = None, model: str | None = None) -> dict:
     """Encaminha um prompt diretamente ao LLM."""
 
-    resultado = gerar_resposta(prompt, url=url, model=model)
-    if not resultado.get("ok"):
+    try:
+        resultado = gerar_resposta(prompt, url=url, model=model)
+    except LLMError as exc:
+        raise RuntimeError(str(exc)) from exc
+
+    if not resultado.get("ok", True):
         raise RuntimeError(resultado.get("message", "Erro ao consultar LLM"))
     return resultado
 
