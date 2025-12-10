@@ -2,20 +2,15 @@ import sqlite3
 
 import pytest
 
-from hermes.data import database
-from hermes.data.migrate import migrate_to_v2
 from hermes.services import db as dao
 
 
 @pytest.fixture
 def setup_db(tmp_path, monkeypatch):
     db_file = tmp_path / "dao.db"
-    monkeypatch.setattr(database, "DB_PATH", str(db_file))
     monkeypatch.setattr(dao, "DB_PATH", str(db_file))
-    database.inicializar_banco()
-    migrate_to_v2(str(db_file))
-    database.criar_usuario("Alice", "tipo")
-    user_id = database.buscar_usuarios()[0][0]
+    dao.init_db(str(db_file))
+    user_id = dao.add_user("Alice", "tipo")
     return user_id, str(db_file)
 
 
@@ -70,8 +65,7 @@ def test_search_ideas_filters(setup_db):
     second = dao.add_idea(
         user_id, "Music", "about music", llm_topic="music", tags="art"
     )
-    database.criar_usuario("Bob", "tipo")
-    other_user = database.buscar_usuarios()[1][0]
+    other_user = dao.add_user("Bob", "tipo")
     third = dao.add_idea(other_user, "Other", "body", llm_topic="ai", tags="tech")
 
     res = dao.search_ideas(text="AI")

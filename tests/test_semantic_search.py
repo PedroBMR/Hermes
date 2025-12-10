@@ -74,7 +74,6 @@ sys.modules.setdefault("sklearn.feature_extraction.text", text)
 sys.modules.setdefault("sklearn.metrics", metrics)
 sys.modules.setdefault("sklearn.metrics.pairwise", pairwise)
 
-from hermes.data import database
 from hermes.services import db as dao
 from hermes.services.semantic_search import semantic_search
 
@@ -82,9 +81,8 @@ from hermes.services.semantic_search import semantic_search
 @pytest.fixture
 def sample_ideas(tmp_path, monkeypatch):
     db_file = tmp_path / "semantic.db"
-    monkeypatch.setattr(database, "DB_PATH", str(db_file))
     monkeypatch.setattr(dao, "DB_PATH", str(db_file))
-    database.inicializar_banco()
+    dao.init_db(str(db_file))
 
     user1 = dao.add_user("Alice", "tipo")
     user2 = dao.add_user("Bob", "tipo")
