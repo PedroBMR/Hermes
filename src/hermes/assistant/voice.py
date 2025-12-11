@@ -26,6 +26,9 @@ def _normalizar_texto(texto: str) -> str:
 class HotwordListener:
     """Listener contínuo que detecta uma hotword no áudio do microfone."""
 
+    STATE_IDLE = "idle"
+    STATE_AWAITING_COMMAND = "awaiting_command"
+
     def __init__(
         self,
         hotword: str = "hermes",
@@ -51,6 +54,7 @@ class HotwordListener:
         self._device = device
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
+        self._state = self.STATE_IDLE
 
         logger.info("Carregando modelo Vosk para hotword '%s'", self.hotword)
         self._model = vosk.Model(model_path) if model_path else vosk.Model(lang="pt-br")
@@ -101,21 +105,43 @@ class HotwordListener:
                         continue
                     if self._recognizer.AcceptWaveform(data):
                         resultado = json.loads(self._recognizer.Result())
-                        self._process_result(resultado.get("text", ""))
+                        self._process_result(resultado.get("text", ""), is_final=True)
                     else:
                         parcial = json.loads(self._recognizer.PartialResult())
-                        self._process_result(parcial.get("partial", ""))
+                        self._process_result(parcial.get("partial", ""), is_final=False)
         except Exception:
             logger.exception("Erro no loop de escuta do HotwordListener")
 
-    def _process_result(self, texto: str) -> None:
+    def _process_result(self, texto: str, *, is_final: bool) -> None:
         if not texto:
             return
 
         texto_normalizado = _normalizar_texto(texto)
-        if self.hotword in texto_normalizado:
-            logger.info("Hotword '%s' detectada no texto: %s", self.hotword, texto)
+        if self._state == self.STATE_IDLE:
+            if self.hotword in texto_normalizado:
+                logger.info("Hotword '%s' detectada no texto: %s", self.hotword, texto)
+                self._state = self.STATE_AWAITING_COMMAND
+                try:
+                    self.on_hotword_detected(texto)
+                except Exception:  # pragma: no cover - callback de usuário
+                    logger.exception("Erro ao executar callback de hotword")
+        elif self._state == self.STATE_AWAITING_COMMAND:
+            if not is_final:
+                return
+            if texto_normalizado == self.hotword:
+                logger.debug("Ignorando resultado final apenas com a hotword")
+                return
+
+            logger.info("Comando detectado: %s", texto)
             try:
-                self.on_hotword_detected(texto)
+                self.on_command(texto)
             except Exception:  # pragma: no cover - callback de usuário
-                logger.exception("Erro ao executar callback de hotword")
+                logger.exception("Erro ao executar callback de comando")
+            finally:
+                self._state = self.STATE_IDLE
+                logger.debug("Retornando ao estado idle")
+
+    def on_command(self, texto: str) -> None:  # pragma: no cover - callback
+        """Callback chamado quando um comando é detectado após a hotword."""
+
+        logger.info("Comando recebido: %s", texto)
