@@ -108,6 +108,7 @@ class HermesGUI(QWidget):
         self.title_input = QLineEdit()
         self.title_mic = QPushButton("🎙️")
         self.title_mic.clicked.connect(lambda: self.capturar_fala("titulo"))
+        self.title_mic.setToolTip("Capturar voz para o título")
         title_layout = QHBoxLayout()
         title_layout.addWidget(self.title_input)
         title_layout.addWidget(self.title_mic)
@@ -116,6 +117,7 @@ class HermesGUI(QWidget):
         self.desc_input = QTextEdit()
         self.desc_mic = QPushButton("🎙️")
         self.desc_mic.clicked.connect(lambda: self.capturar_fala("descricao"))
+        self.desc_mic.setToolTip("Capturar voz para a descrição")
         desc_layout = QHBoxLayout()
         desc_layout.addWidget(self.desc_input)
         desc_layout.addWidget(self.desc_mic)
@@ -164,6 +166,7 @@ class HermesGUI(QWidget):
         self.assistant_send.clicked.connect(self.enviar_mensagem_assistente)
         self.assistant_mic = QPushButton("🎙️")
         self.assistant_mic.clicked.connect(self.capturar_fala_assistente)
+        self.assistant_mic.setToolTip("Capturar voz para o assistente")
         self.assistant_tts_checkbox = QCheckBox("Falar resposta")
         self.continuous_listen_checkbox = QCheckBox("🎙️ Escuta contínua (Hermes)")
         self.continuous_listen_checkbox.setToolTip(
@@ -204,6 +207,12 @@ class HermesGUI(QWidget):
         assistant_layout.addLayout(assistant_input_layout)
         self.assistant_tab = QWidget()
         self.assistant_tab.setLayout(assistant_layout)
+
+        self._default_mic_tooltips = {
+            self.title_mic: self.title_mic.toolTip(),
+            self.desc_mic: self.desc_mic.toolTip(),
+            self.assistant_mic: self.assistant_mic.toolTip(),
+        }
 
         # Layout principal com abas
         ideias_layout = QVBoxLayout()
@@ -491,25 +500,47 @@ class HermesGUI(QWidget):
             engine_tts.say(resposta)
             engine_tts.runAndWait()
 
-    def _atualizar_estado_mic_continuo(self, ativo: bool) -> None:
-        tooltip = "Desativado enquanto a escuta contínua está ativa."
+    def _atualizar_estado_mic_continuo(self, ativo: bool, motivo: str | None = None) -> None:
+        tooltip = motivo or "Desativado enquanto a escuta contínua está ativa."
         for botao_mic in (self.title_mic, self.desc_mic, self.assistant_mic):
             botao_mic.setEnabled(not ativo)
-            botao_mic.setToolTip(tooltip if ativo else "")
+            if ativo:
+                botao_mic.setToolTip(tooltip)
+            else:
+                botao_mic.setToolTip(self._default_mic_tooltips.get(botao_mic, ""))
 
     def _alternar_escuta_continua(self, habilitar: bool) -> None:
         if habilitar:
             if self.listener_thread and self.listener_thread.isRunning():
                 return
-            self.listener_thread = HotwordListenerThread(self)
-            self.listener_thread.hotword_detected.connect(self._on_hotword_detected)
-            self.listener_thread.command_detected.connect(self._on_command_detected)
-            self.listener_thread.hotword_error.connect(self._on_hotword_error)
+            self._atualizar_estado_mic_continuo(True)
             logger.info("Ativando escuta contínua do Hermes")
-            self.listener_thread.start()
+            try:
+                self.listener_thread = HotwordListenerThread(self)
+                self.listener_thread.hotword_detected.connect(self._on_hotword_detected)
+                self.listener_thread.command_detected.connect(self._on_command_detected)
+                self.listener_thread.hotword_error.connect(self._on_hotword_error)
+                self.listener_thread.start()
+            except Exception as exc:
+                logger.exception("Falha ao iniciar escuta contínua")
+                self._atualizar_estado_mic_continuo(False)
+                QMessageBox.warning(
+                    self,
+                    "Não foi possível iniciar a escuta contínua",
+                    (
+                        "Verifique se outro aplicativo está usando o microfone ou se as"
+                        " permissões de áudio estão habilitadas.\n"
+                        f"Detalhe técnico: {exc}"
+                    ),
+                )
+                self.continuous_listen_checkbox.blockSignals(True)
+                self.continuous_listen_checkbox.setChecked(False)
+                self.continuous_listen_checkbox.blockSignals(False)
+                self.listener_status.setText("Hotword: inativa")
+                self.listener_thread = None
+                return
             self.assistant_history.append("[Hermes] Escuta contínua ativada.")
             self._restore_listen_visuals()
-            self._atualizar_estado_mic_continuo(True)
         else:
             if self.listener_thread:
                 self.listener_thread.stop()
@@ -557,12 +588,13 @@ class HermesGUI(QWidget):
         self.continuous_listen_checkbox.setChecked(False)
         self.continuous_listen_checkbox.blockSignals(False)
         if self.listener_thread:
+            self.listener_thread.stop()
             self.listener_thread.wait()
             self.listener_thread = None
         self.assistant_history.append(
             "[Hermes] Escuta contínua desativada por erro de microfone/hotword."
         )
-        self.listener_status.setText("Hotword: erro")
+        self.listener_status.setText("Hotword: desativada por erro")
         self.listener_status.setStyleSheet("color: red;")
         self.assistant_tab.setStyleSheet("")
         self.hotword_indicator.clear()
