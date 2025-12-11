@@ -1,8 +1,10 @@
+import importlib.util
 import logging
 import sys
+import time
 from datetime import datetime, timedelta
 
-from ..assistant import engine
+from ..assistant import HotwordListener, engine
 from ..assistant.state import ConversationState
 from ..config import load_from_args
 from ..core import app
@@ -73,8 +75,9 @@ def menu_principal(usuario_id, nome_usuario):
         logger.info("4. Criar lembrete")
         logger.info("5. Listar meus lembretes")
         logger.info("6. Conversar com o Hermes")
-        logger.info("7. Trocar de usuário")
-        logger.info("8. Sair")
+        logger.info("7. Escuta contínua por voz")
+        logger.info("8. Trocar de usuário")
+        logger.info("9. Sair")
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
@@ -154,8 +157,10 @@ def menu_principal(usuario_id, nome_usuario):
         elif opcao == "6":
             conversar_com_hermes(usuario_id)
         elif opcao == "7":
-            return True  # trocar de usuário
+            escuta_continua_por_voz(usuario_id)
         elif opcao == "8":
+            return True  # trocar de usuário
+        elif opcao == "9":
             logger.info("Encerrando Hermes.")
             return False
         else:
@@ -175,6 +180,57 @@ def conversar_com_hermes(usuario_id: int) -> None:
 
         resposta = engine.responder_mensagem(mensagem, state=state)
         logger.info("%s", resposta)
+
+
+def escuta_continua_por_voz(usuario_id: int) -> None:
+    logger.info("Iniciando escuta contínua. Fale '%s' para ativar.", "Hermes")
+    usar_tts = input("Ativar TTS para respostas? (s/N): ").strip().lower() == "s"
+    engine_tts = None
+
+    if usar_tts:
+        if importlib.util.find_spec("pyttsx3") is None:
+            logger.warning("Biblioteca pyttsx3 não encontrada. Prosseguindo sem TTS.")
+            usar_tts = False
+        else:
+            import pyttsx3
+
+            try:
+                engine_tts = pyttsx3.init()
+            except Exception:  # pragma: no cover - inicialização de voz
+                logger.exception(
+                    "Não foi possível inicializar o TTS. Prosseguindo sem áudio."
+                )
+                usar_tts = False
+
+    state = ConversationState(user_id=usuario_id)
+
+    class _CliHotwordListener(HotwordListener):
+        def on_hotword_detected(self, texto: str) -> None:  # pragma: no cover - callback
+            logger.info("Hotword detectada: %s", texto)
+
+        def on_command(self, texto: str) -> None:  # pragma: no cover - callback
+            mensagem = texto.strip()
+            if not mensagem:
+                return
+            logger.info("Você (voz): %s", mensagem)
+            resposta = engine.responder_mensagem(mensagem, state=state)
+            logger.info("Hermes: %s", resposta)
+
+            if usar_tts and engine_tts and resposta:
+                engine_tts.say(resposta)
+                engine_tts.runAndWait()
+
+    listener = _CliHotwordListener()
+    listener.start()
+    logger.info("Escutando... pressione Ctrl+C para encerrar a escuta contínua.")
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        logger.info("Escuta contínua encerrada pelo usuário.")
+    finally:
+        listener.stop()
 
 
 def main(argv: list[str] | None = None):
