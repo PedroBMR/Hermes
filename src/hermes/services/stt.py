@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import logging
+
+import vosk
+
+if TYPE_CHECKING:
+    from vosk import Model
 
 logger = logging.getLogger(__name__)
 
-_VOSK_MODEL = None
+_VOSK_MODEL: Model | None = None
 
 
-def get_vosk_model(model_path: str | None = None) -> vosk.Model:
+def get_vosk_model(model_path: str | None = None) -> Model:
     """Obtém uma instância compartilhada de ``vosk.Model``.
 
     Args:
@@ -21,8 +28,6 @@ def get_vosk_model(model_path: str | None = None) -> vosk.Model:
     """
 
     global _VOSK_MODEL
-
-    import vosk
 
     if _VOSK_MODEL is not None:
         return _VOSK_MODEL
