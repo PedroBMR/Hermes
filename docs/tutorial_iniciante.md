@@ -109,15 +109,27 @@ Com o ambiente virtual ativo e dentro da pasta do projeto, execute:
 pip install -e .
 ```
 
-Esse comando instala o Hermes em modo editável e baixa todas as bibliotecas obrigatórias (como PyQt5, requests e APScheduler). Caso prefira instalar apenas as dependências listadas, use `pip install -r requirements.txt`, mas para executar o Hermes como módulo o modo editável é o caminho mais simples.
+Esse comando instala o Hermes em modo editável com as bibliotecas centrais (PyQt5, requests e APScheduler).
+
+Se quiser habilitar **todas** as funcionalidades (voz, API HTTP e busca semântica), instale com as *extras*:
+
+```bash
+pip install -e .[voice,api,semantic]
+```
+
+O arquivo `requirements.txt` contém o mesmo conjunto completo de dependências, caso prefira:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## 7. Recursos opcionais
 
 ### 7.1 Entrada por voz com Vosk
 
-1. Instale a biblioteca Python:
+1. Instale as bibliotecas de voz (caso não tenha usado `pip install -e .[voice,api,semantic]`):
    ```bash
-   pip install vosk
+   pip install -e .[voice]
    ```
 2. Baixe o modelo pequeno de voz em português brasileiro em <https://alphacephei.com/vosk/models> (procure por `vosk-model-small-pt-0.3.zip`).
 3. Extraia o arquivo e mova a pasta resultante para `~/.cache/vosk/vosk-model-small-pt-0.3`:

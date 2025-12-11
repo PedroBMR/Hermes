@@ -6,35 +6,40 @@ Assistente pessoal modular, privado e offline com múltiplos usuários, interfac
 
 ## Instalação
 
-Instale o Hermes em modo editável para desenvolver ou executar localmente:
+Instale o Hermes em modo editável com as dependências **centrais** (interface e
+agendador):
 
 ```bash
 pip install -e .
 ```
 
-Caso deseje instalar apenas as dependências listadas, utilize `requirements.txt`:
+Para ativar todos os recursos (voz, API HTTP e busca semântica), instale com as
+*extras*:
+
+```bash
+pip install -e .[voice,api,semantic]
+```
+
+O arquivo `requirements.txt` espelha o conjunto completo de bibliotecas (core +
+extras). Se preferir, use:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-O arquivo de requisitos inclui o pacote `scikit-learn` (>=1.1),
-necessário para a funcionalidade de busca semântica de ideias.
-
 ### Dependências opcionais
 
-Algumas funcionalidades podem requerer bibliotecas adicionais que não
-estão incluídas na instalação padrão:
+Os recursos são divididos em grupos:
 
-- `vosk` – reconhecimento de fala. **Obrigatório** para utilizar a entrada
-  por voz.
-- `ollama` – cliente Python para o servidor Ollama.
+- **Core:** PyQt5, requests, APScheduler (instalados por padrão com `pip install -e .`).
+- **voice:** `vosk`, `sounddevice`, `pyttsx3` (instale com `pip install -e .[voice]` ou
+  `pip install -e .[voice,api,semantic]`).
+- **api:** `fastapi`, `uvicorn`, `pydantic` (instale com `pip install -e .[api]`).
+- **semantic:** `scikit-learn` (instale com `pip install -e .[semantic]`).
 
-Para usar voz, instale o `vosk` e baixe o modelo de linguagem [pt-BR pequeno](https://alphacephei.com/vosk/models/vosk-model-small-pt-0.3.zip).
+Para usar voz, instale o extra `voice` e baixe o modelo de linguagem [pt-BR pequeno](https://alphacephei.com/vosk/models/vosk-model-small-pt-0.3.zip).
 Descompacte o conteúdo em `~/.cache/vosk/vosk-model-small-pt-0.3` para que o
 aplicativo consiga localizar os arquivos offline.
-
-Instale as dependências manualmente caso deseje experimentar esses recursos.
 
 ## Instalação Windows
 
