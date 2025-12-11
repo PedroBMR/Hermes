@@ -474,6 +474,12 @@ class HermesGUI(QWidget):
             engine_tts.say(resposta)
             engine_tts.runAndWait()
 
+    def _atualizar_estado_mic_continuo(self, ativo: bool) -> None:
+        tooltip = "Desativado enquanto a escuta contínua está ativa."
+        for botao_mic in (self.title_mic, self.desc_mic, self.assistant_mic):
+            botao_mic.setEnabled(not ativo)
+            botao_mic.setToolTip(tooltip if ativo else "")
+
     def _alternar_escuta_continua(self, habilitar: bool) -> None:
         if habilitar:
             if self.listener_thread and self.listener_thread.isRunning():
@@ -488,6 +494,7 @@ class HermesGUI(QWidget):
             self.assistant_history.append("[Hermes] Escuta contínua ativada.")
             self.listener_status.setStyleSheet("color: green;")
             self.assistant_tab.setStyleSheet("border: 2px solid #4caf50;")
+            self._atualizar_estado_mic_continuo(True)
         else:
             if self.listener_thread:
                 self.listener_thread.stop()
@@ -498,6 +505,7 @@ class HermesGUI(QWidget):
             self.assistant_history.append("[Hermes] Escuta contínua desativada.")
             self.listener_status.setStyleSheet("")
             self.assistant_tab.setStyleSheet("")
+            self._atualizar_estado_mic_continuo(False)
 
     def _on_hotword_detected(self, texto: str) -> None:
         self.listener_status.setText("🟢 Hotword: detectada!")
@@ -530,6 +538,7 @@ class HermesGUI(QWidget):
         self.listener_status.setText("Hotword: inativa")
         self.listener_status.setStyleSheet("color: red;")
         self.assistant_tab.setStyleSheet("")
+        self._atualizar_estado_mic_continuo(False)
 
 
 def main(argv: list[str] | None = None) -> None:
