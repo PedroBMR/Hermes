@@ -6,22 +6,22 @@ Assistente pessoal modular, privado e offline com múltiplos usuários, interfac
 
 ## Instalação
 
-Instale o Hermes em modo editável com as dependências **centrais** (interface e
-agendador):
+### Instalação Completa do Hermes
+
+Modo completo (GUI + Voz + API + Busca Semântica):
+
+```bash
+pip install -e ".[voice,api,semantic]"
+```
+
+Modo mínimo (GUI apenas):
 
 ```bash
 pip install -e .
 ```
 
-Para ativar todos os recursos (voz, API HTTP e busca semântica), instale com as
-*extras*:
-
-```bash
-pip install -e .[voice,api,semantic]
-```
-
-O arquivo `requirements.txt` espelha o conjunto completo de bibliotecas (core +
-extras). Se preferir, use:
+O arquivo `requirements.txt` agora aponta para o mesmo conjunto completo de
+dependências do modo completo:
 
 ```bash
 pip install -r requirements.txt
@@ -29,13 +29,14 @@ pip install -r requirements.txt
 
 ### Dependências opcionais
 
-Os recursos são divididos em grupos:
+Os recursos são divididos em grupos. Use as *extras* para deixar explícito o que
+quer habilitar:
 
-- **Core:** PyQt5, requests, APScheduler (instalados por padrão com `pip install -e .`).
-- **voice:** `vosk`, `sounddevice`, `pyttsx3` (instale com `pip install -e .[voice]` ou
-  `pip install -e .[voice,api,semantic]`).
-- **api:** `fastapi`, `uvicorn`, `pydantic` (instale com `pip install -e .[api]`).
-- **semantic:** `scikit-learn` (instale com `pip install -e .[semantic]`).
+- **Core:** PyQt5, requests, APScheduler, Vosk, sounddevice, pyttsx3, numpy e
+  scikit-learn.
+- **voice:** `vosk`, `sounddevice`, `pyttsx3`.
+- **api:** `fastapi`, `uvicorn`, `pydantic`.
+- **semantic:** `scikit-learn`, `numpy`.
 
 Para usar voz, instale o extra `voice` e baixe o modelo de linguagem [pt-BR pequeno](https://alphacephei.com/vosk/models/vosk-model-small-pt-0.3.zip).
 Descompacte o conteúdo em `~/.cache/vosk/vosk-model-small-pt-0.3` para que o

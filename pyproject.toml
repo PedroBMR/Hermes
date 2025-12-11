@@ -13,12 +13,32 @@ dependencies = [
     "PyQt5>=5.15.9",
     "requests",
     "apscheduler",
+    "vosk==0.3.45",
+    "sounddevice",
+    "pyttsx3",
+    "fastapi",
+    "uvicorn",
+    "pydantic>=1,<3",
+    "scikit-learn>=1.1",
+    "numpy",
+    "python-dotenv",
 ]
 
 [project.optional-dependencies]
-voice = ["vosk==0.3.45", "sounddevice", "pyttsx3"]
-api = ["fastapi", "uvicorn", "pydantic>=1,<3"]
-semantic = ["scikit-learn>=1.1"]
+voice = [
+    "vosk==0.3.45",
+    "sounddevice",
+    "pyttsx3",
+]
+api = [
+    "fastapi",
+    "uvicorn",
+    "pydantic>=1,<3",
+]
+semantic = [
+    "scikit-learn>=1.1",
+    "numpy",
+]
 
 [project.scripts]
 "hermes-db-migrate" = "hermes.data.migrate:main"

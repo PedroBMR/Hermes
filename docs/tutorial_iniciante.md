@@ -103,21 +103,29 @@ Sempre que for trabalhar no Hermes, lembre-se de ativar o ambiente virtual antes
 
 ## 6. Instalar o Hermes e as dependências principais
 
-Com o ambiente virtual ativo e dentro da pasta do projeto, execute:
+Com o ambiente virtual ativo e dentro da pasta do projeto, escolha uma das formas:
+
+### Instalação completa (recomendada)
+
+Inclui GUI, voz, API HTTP e busca semântica:
+
+```bash
+pip install -e ".[voice,api,semantic]"
+```
+
+### Instalação mínima (somente GUI)
+
+Instala o Hermes em modo editável com o conjunto básico de bibliotecas. Você pode
+adicionar as *extras* depois, conforme precisar:
 
 ```bash
 pip install -e .
 ```
 
-Esse comando instala o Hermes em modo editável com as bibliotecas centrais (PyQt5, requests e APScheduler).
+### Usando requirements.txt
 
-Se quiser habilitar **todas** as funcionalidades (voz, API HTTP e busca semântica), instale com as *extras*:
-
-```bash
-pip install -e .[voice,api,semantic]
-```
-
-O arquivo `requirements.txt` contém o mesmo conjunto completo de dependências, caso prefira:
+O arquivo `requirements.txt` aponta para o mesmo conjunto completo de
+dependências do modo recomendado. Se preferir, use:
 
 ```bash
 pip install -r requirements.txt
