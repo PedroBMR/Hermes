@@ -2,6 +2,8 @@ import logging
 import sys
 from datetime import datetime, timedelta
 
+from ..assistant import engine
+from ..assistant.state import ConversationState
 from ..config import load_from_args
 from ..core import app
 from ..logging import setup_logging
@@ -70,8 +72,9 @@ def menu_principal(usuario_id, nome_usuario):
         logger.info("3. Pesquisar ideias")
         logger.info("4. Criar lembrete")
         logger.info("5. Listar meus lembretes")
-        logger.info("6. Trocar de usuário")
-        logger.info("7. Sair")
+        logger.info("6. Conversar com o Hermes")
+        logger.info("7. Trocar de usuário")
+        logger.info("8. Sair")
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
@@ -149,12 +152,29 @@ def menu_principal(usuario_id, nome_usuario):
             else:
                 logger.info("Nenhum lembrete disparado.")
         elif opcao == "6":
-            return True  # trocar de usuário
+            conversar_com_hermes(usuario_id)
         elif opcao == "7":
+            return True  # trocar de usuário
+        elif opcao == "8":
             logger.info("Encerrando Hermes.")
             return False
         else:
             logger.error("Opção inválida.")
+
+
+def conversar_com_hermes(usuario_id: int) -> None:
+    logger.info("Iniciando conversa com o Hermes. Digite 'sair' para encerrar.")
+    state = ConversationState(user_id=usuario_id)
+    while True:
+        mensagem = input("> ").strip()
+        if not mensagem:
+            continue
+        if mensagem.lower() in {"sair", "quit", "exit", "q"}:
+            logger.info("Conversa encerrada.")
+            break
+
+        resposta = engine.responder_mensagem(mensagem, state=state)
+        logger.info("%s", resposta)
 
 
 def main(argv: list[str] | None = None):
