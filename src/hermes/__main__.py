@@ -1,18 +1,11 @@
 """Entrypoint for running Hermes as a module."""
 
-from .config import load_from_args
-from .logging import setup_logging
-from .services.reminders import start_scheduler
 from .ui import gui
 
 
 def main(argv: list[str] | None = None) -> None:
     """Launch the graphical user interface."""
-    # Initialize logging early so the log directory is created
-    setup_logging()
-    load_from_args(argv)
-    start_scheduler()
-    gui.main()
+    gui.main(argv)
 
 
 if __name__ == "__main__":
