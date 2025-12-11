@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Iterable
 
+from ..core import app
 from ..core.prompts import carregar_prompt_sistema as _carregar_prompt_sistema
 from ..services.llm_interface import LLMError, gerar_resposta
 from .state import ConversationState
@@ -22,6 +23,45 @@ def carregar_prompt_sistema() -> str:
     """
 
     return _carregar_prompt_sistema()
+
+
+def coletar_contexto_ideias(user_id: int, pergunta: str) -> dict:
+    """Recupera contexto de ideias relevantes para a pergunta do usuário.
+
+    Usa busca semântica para trazer as ideias mais relacionadas e monta um
+    texto de apoio a ser incluído no prompt enviado ao LLM.
+    """
+
+    if user_id is None:
+        return {"contexto": "", "ideias": []}
+
+    try:
+        logger.info("Buscando ideias semânticas para o usuário %s", user_id)
+        ideias = app.buscar_ideias_semanticas(user_id, pergunta, limite=5)
+    except Exception:  # pragma: no cover - log e retorna contexto vazio
+        logger.exception("Falha ao buscar ideias semânticas para o usuário %s", user_id)
+        return {"contexto": "", "ideias": []}
+
+    if not ideias:
+        logger.info("Nenhuma ideia relacionada encontrada para o usuário %s", user_id)
+        return {"contexto": "", "ideias": []}
+
+    linhas: list[str] = []
+    for ideia in ideias:
+        titulo = ideia.get("title") or "(sem título)"
+        resumo = ideia.get("llm_summary") or ideia.get("body") or "(sem resumo)"
+        tags = ideia.get("tags") or "(sem tags)"
+        criado_em = ideia.get("created_at") or "(data desconhecida)"
+        linhas.append(
+            f"- {titulo} ({criado_em}) | Tags: {tags} | Resumo: {resumo}"
+        )
+
+    contexto = (
+        "Essas são algumas ideias que o usuário já registrou sobre temas "
+        "possivelmente relacionados:\n" + "\n".join(linhas)
+    )
+
+    return {"contexto": contexto, "ideias": ideias}
 
 
 def _formatar_historico(historico: Iterable[dict]) -> str:
@@ -53,6 +93,12 @@ def responder_mensagem(
         partes_prompt.append(
             "Contexto: responda para o usuário identificado pelo id " f"{user_id}."
         )
+
+        contexto_ideias = coletar_contexto_ideias(user_id, mensagem)
+        if contexto_ideias.get("contexto"):
+            partes_prompt.append(contexto_ideias["contexto"])
+        else:
+            logger.debug("Sem contexto de ideias para incluir no prompt")
 
     historico = state.history if state else None
     if historico:
