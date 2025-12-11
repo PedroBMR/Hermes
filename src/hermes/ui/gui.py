@@ -1,5 +1,6 @@
 import csv
 import json
+import logging
 import sys
 
 import pyttsx3
@@ -37,11 +38,15 @@ LLM_FRIENDLY_MESSAGE = (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 class HotwordListenerThread(QThread):
     """Thread que encapsula o ``HotwordListener`` e expõe sinais Qt."""
 
     hotword_detected = pyqtSignal(str)
     command_detected = pyqtSignal(str)
+    hotword_error = pyqtSignal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -49,22 +54,35 @@ class HotwordListenerThread(QThread):
         self._stop_requested = False
 
     def run(self) -> None:  # pragma: no cover - integrações com áudio/threads
-        class _QtHotwordListener(HotwordListener):
-            def __init__(self, outer: HotwordListenerThread) -> None:
-                super().__init__()
-                self._outer = outer
+        try:
+            class _QtHotwordListener(HotwordListener):
+                def __init__(self, outer: HotwordListenerThread) -> None:
+                    super().__init__()
+                    self._outer = outer
 
-            def on_hotword_detected(self, texto: str) -> None:
-                self._outer.hotword_detected.emit(texto)
+                def on_hotword_detected(self, texto: str) -> None:
+                    self._outer.hotword_detected.emit(texto)
 
-            def on_command(self, texto: str) -> None:
-                self._outer.command_detected.emit(texto)
+                def on_command(self, texto: str) -> None:
+                    self._outer.command_detected.emit(texto)
 
-        self._listener = _QtHotwordListener(self)
-        self._listener.start()
-        while not self._stop_requested:
-            self.msleep(100)
-        self._listener.stop()
+                def on_error(self, exc: Exception) -> None:
+                    self._outer.hotword_error.emit(str(exc))
+
+            self._listener = _QtHotwordListener(self)
+            self._listener.start()
+            while not self._stop_requested:
+                self.msleep(100)
+        except Exception as exc:
+            logger.exception("Erro ao executar HotwordListenerThread")
+            self.hotword_error.emit(str(exc))
+        finally:
+            if self._listener:
+                try:
+                    self._listener.stop()
+                except Exception:  # pragma: no cover - melhor esforço
+                    logger.exception("Falha ao encerrar HotwordListener")
+            self._listener = None
 
     def stop(self) -> None:  # pragma: no cover - integrações com áudio/threads
         self._stop_requested = True
@@ -146,6 +164,11 @@ class HermesGUI(QWidget):
         self.assistant_mic.clicked.connect(self.capturar_fala_assistente)
         self.assistant_tts_checkbox = QCheckBox("Falar resposta")
         self.continuous_listen_checkbox = QCheckBox("🎙️ Escuta contínua (Hermes)")
+        self.continuous_listen_checkbox.setToolTip(
+            "O áudio do modo de escuta contínua é processado localmente pelo Hermes.\n"
+            "Nada é enviado para a internet.\n"
+            "Para desligar, basta desmarcar esta opção."
+        )
         self.continuous_listen_checkbox.toggled.connect(self._alternar_escuta_continua)
         self.listener_status = QLabel("Hotword: inativa")
         self.listener_thread: HotwordListenerThread | None = None
@@ -454,33 +477,55 @@ class HermesGUI(QWidget):
             self.listener_thread = HotwordListenerThread(self)
             self.listener_thread.hotword_detected.connect(self._on_hotword_detected)
             self.listener_thread.command_detected.connect(self._on_command_detected)
+            self.listener_thread.hotword_error.connect(self._on_hotword_error)
+            logger.info("Ativando escuta contínua do Hermes")
             self.listener_thread.start()
-            self.listener_status.setText("Hotword: aguardando...")
+            self.listener_status.setText("🟢 Hotword: aguardando...")
             self.assistant_history.append("[Hermes] Escuta contínua ativada.")
-            self.listener_status.setStyleSheet("")
-            self.assistant_tab.setStyleSheet("")
+            self.listener_status.setStyleSheet("color: green;")
+            self.assistant_tab.setStyleSheet("border: 2px solid #4caf50;")
         else:
             if self.listener_thread:
                 self.listener_thread.stop()
                 self.listener_thread.wait()
                 self.listener_thread = None
+            logger.info("Desativando escuta contínua do Hermes")
             self.listener_status.setText("Hotword: inativa")
             self.assistant_history.append("[Hermes] Escuta contínua desativada.")
             self.listener_status.setStyleSheet("")
             self.assistant_tab.setStyleSheet("")
 
     def _on_hotword_detected(self, texto: str) -> None:
-        self.listener_status.setText("Hotword: detectada!")
+        self.listener_status.setText("🟢 Hotword: detectada!")
         self.assistant_history.append(f"[Hermes] Hotword detectada: {texto}")
         self.listener_status.setStyleSheet("color: green;")
         self.assistant_tab.setStyleSheet("background-color: #e6ffe6;")
 
     def _on_command_detected(self, texto: str) -> None:
-        self.listener_status.setText("Hotword: aguardando...")
-        self.listener_status.setStyleSheet("")
-        self.assistant_tab.setStyleSheet("")
+        self.listener_status.setText("🟢 Hotword: aguardando...")
+        self.listener_status.setStyleSheet("color: green;")
+        self.assistant_tab.setStyleSheet("border: 2px solid #4caf50;")
         self.assistant_history.append(f"[Hermes] Comando capturado: {texto}")
         self._processar_mensagem_assistente(texto, origem_voz=True)
+
+    def _on_hotword_error(self, mensagem: str) -> None:
+        logger.error("Erro na escuta contínua: %s", mensagem)
+        QMessageBox.warning(
+            self,
+            "Microfone indisponível",
+            "Não foi possível iniciar a escuta contínua.\n"
+            "Verifique o microfone e tente novamente.\n"
+            f"Detalhes: {mensagem}",
+        )
+        self.continuous_listen_checkbox.blockSignals(True)
+        self.continuous_listen_checkbox.setChecked(False)
+        self.continuous_listen_checkbox.blockSignals(False)
+        if self.listener_thread:
+            self.listener_thread.wait()
+            self.listener_thread = None
+        self.listener_status.setText("Hotword: inativa")
+        self.listener_status.setStyleSheet("color: red;")
+        self.assistant_tab.setStyleSheet("")
 
 
 def main(argv: list[str] | None = None) -> None:
