@@ -90,6 +90,11 @@ class HotwordListener:
 
         logger.info("Hotword '%s' detectada: %s", self.hotword, texto)
 
+    def on_error(self, exc: Exception) -> None:  # pragma: no cover - callback
+        """Callback chamado quando ocorre um erro durante a captura de áudio."""
+
+        logger.error("Erro no HotwordListener: %s", exc)
+
     def _listen_loop(self) -> None:
         try:
             with sd.RawInputStream(
@@ -109,8 +114,12 @@ class HotwordListener:
                     else:
                         parcial = json.loads(self._recognizer.PartialResult())
                         self._process_result(parcial.get("partial", ""), is_final=False)
-        except Exception:
+        except Exception as exc:
             logger.exception("Erro no loop de escuta do HotwordListener")
+            try:
+                self.on_error(exc)
+            except Exception:  # pragma: no cover - callback de usuário
+                logger.exception("Erro ao notificar falha de captura de áudio")
 
     def _process_result(self, texto: str, *, is_final: bool) -> None:
         if not texto:
