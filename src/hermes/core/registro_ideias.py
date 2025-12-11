@@ -3,7 +3,6 @@
 import logging
 from pathlib import Path
 
-from ..services.db import add_idea
 from ..services.llm_interface import LLMError, gerar_resposta
 
 logger = logging.getLogger(__name__)
@@ -79,32 +78,9 @@ def analisar_ideia_com_llm(
     }
 
 
-def registrar_ideia_com_llm(
-    usuario_id: int,
-    titulo: str,
-    descricao: str,
-    url: str | None = None,
-    model: str | None = None,
-) -> str:
-    logger.info("Registrando ideia: %s", titulo)
-    logger.info("Enviando ideia ao modelo para sugestões...")
-
-    dados = analisar_ideia_com_llm(titulo, descricao, url=url, model=model)
-
-    add_idea(
-        usuario_id,
-        titulo,
-        descricao,
-        source=url,
-        llm_summary=dados["llm_summary"],
-        llm_topic=dados["llm_topic"],
-        tags=dados["tags"],
-    )
-    return dados["response"]
-
-
 if __name__ == "__main__":
     usuario_id = 1  # Pedro
     titulo = "Sistema de organização de ideias com inteligência"
     descricao = "Quero um sistema que entenda minhas ideias e me ajude a organizar automaticamente por categoria, prioridade e clareza."
-    registrar_ideia_com_llm(usuario_id, titulo, descricao)
+    resultado = analisar_ideia_com_llm(titulo, descricao)
+    logger.info("Resposta do LLM:\n%s", resultado["response"])

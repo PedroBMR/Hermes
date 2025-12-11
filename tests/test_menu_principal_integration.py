@@ -10,7 +10,9 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
         inputs = iter(["1", "Titulo", "Descricao", "5"])
         with (
             patch.object(
-                main, "registrar_ideia_com_llm", return_value="Tema: X\nResumo: Y"
+                main.app,
+                "registrar_ideia",
+                return_value={"llm_response": "Tema: X\nResumo: Y"},
             ) as mock_registrar,
             patch("builtins.input", lambda _: next(inputs)),
             patch("sys.stdout", new_callable=io.StringIO) as fake_out,
@@ -19,7 +21,7 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
             result = main.menu_principal(1, "User")
 
         self.assertFalse(result)
-        mock_registrar.assert_called_once_with(1, "Titulo", "Descricao")
+        mock_registrar.assert_called_once_with(1, "Titulo", "Descricao", usar_llm=True)
         saida = fake_out.getvalue()
         self.assertIn("Ideia registrada", saida)
         self.assertIn("Sugestões do modelo", saida)
@@ -29,9 +31,10 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
         inputs = iter(["1", "Titulo", "Descricao", "s", "5"])
         with (
             patch.object(
-                main, "registrar_ideia_com_llm", side_effect=RuntimeError("falha")
-            ),
-            patch.object(main, "add_idea") as mock_add,
+                main.app,
+                "registrar_ideia",
+                side_effect=[RuntimeError("falha"), {"id": 1}],
+            ) as mock_registrar,
             patch("builtins.input", lambda _: next(inputs)),
             patch("sys.stdout", new_callable=io.StringIO) as fake_out,
         ):
@@ -39,7 +42,13 @@ class TestMenuPrincipalIntegration(unittest.TestCase):
             result = main.menu_principal(1, "User")
 
         self.assertFalse(result)
-        mock_add.assert_called_once_with(1, "Titulo", "Descricao")
+        self.assertEqual(
+            mock_registrar.call_args_list,
+            [
+                ((1, "Titulo", "Descricao"), {"usar_llm": True}),
+                ((1, "Titulo", "Descricao"), {"usar_llm": False}),
+            ],
+        )
         saida = fake_out.getvalue()
         self.assertIn("Ideia registrada sem sugestões", saida)
 

@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from hermes.core.registro_ideias import registrar_ideia_com_llm
+from hermes.core import app
 from hermes.services import db
 
 
@@ -31,10 +31,11 @@ Tags: organizacao,rotina"""
             "hermes.core.registro_ideias.PROMPT_PATH",
             Path(__file__).resolve().parents[1] / "prompts" / "resumo_classificar.md",
         ):
-            retorno = registrar_ideia_com_llm(
+            retorno = app.registrar_ideia(
                 user_id,
                 "Organizar",
                 "Um sistema para registrar ideias",
+                usar_llm=True,
                 url="http://exemplo",
                 model="teste-modelo",
             )
@@ -46,7 +47,7 @@ Tags: organizacao,rotina"""
         self.assertEqual(ideia["llm_topic"], "Produtividade")
         self.assertEqual(ideia["llm_summary"], "Sistema de ideias")
         self.assertEqual(ideia["tags"], "organizacao,rotina")
-        self.assertEqual(retorno, resposta_llm)
+        self.assertEqual(retorno["llm_response"], resposta_llm)
 
 
 if __name__ == "__main__":

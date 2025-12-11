@@ -2,10 +2,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from hermes.core.registro_ideias import (
-    analisar_ideia_com_llm,
-    registrar_ideia_com_llm,
-)
+from hermes.core import app
+from hermes.core.registro_ideias import analisar_ideia_com_llm
 
 
 class TestRegistrarIdeiaComLLM(unittest.TestCase):
@@ -24,15 +22,17 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
                     "response": "Tema: X\nResumo: Y\nTags: a,b",
                 },
             ) as mock_llm,
-            patch("hermes.core.registro_ideias.add_idea") as mock_add,
+            patch("hermes.core.app.add_idea") as mock_add,
             patch(
                 "hermes.core.registro_ideias.PROMPT_PATH",
-                Path(__file__).resolve().parents[1] / "prompts" / "resumo_classificar.md",
+                Path(__file__).resolve().parents[1]
+                / "prompts"
+                / "resumo_classificar.md",
             ),
             patch("builtins.print"),
         ):
-            resposta = registrar_ideia_com_llm(
-                usuario_id, titulo, descricao, url=url, model=model
+            resposta = app.registrar_ideia(
+                usuario_id, titulo, descricao, usar_llm=True, url=url, model=model
             )
 
         mock_llm.assert_called_once()
@@ -51,7 +51,16 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
             llm_topic="X",
             tags="a,b",
         )
-        self.assertEqual(resposta, "Tema: X\nResumo: Y\nTags: a,b")
+        self.assertEqual(
+            resposta,
+            {
+                "id": mock_add.return_value,
+                "llm_response": "Tema: X\nResumo: Y\nTags: a,b",
+                "llm_summary": "Y",
+                "llm_topic": "X",
+                "tags": "a,b",
+            },
+        )
 
     def test_falha_llm_gera_excecao(self):
         usuario_id = 1
@@ -63,15 +72,17 @@ class TestRegistrarIdeiaComLLM(unittest.TestCase):
                 "hermes.core.registro_ideias.gerar_resposta",
                 return_value={"ok": False, "message": "erro"},
             ) as mock_llm,
-            patch("hermes.core.registro_ideias.add_idea") as mock_add,
+            patch("hermes.core.app.add_idea") as mock_add,
             patch(
                 "hermes.core.registro_ideias.PROMPT_PATH",
-                Path(__file__).resolve().parents[1] / "prompts" / "resumo_classificar.md",
+                Path(__file__).resolve().parents[1]
+                / "prompts"
+                / "resumo_classificar.md",
             ),
             patch("builtins.print"),
         ):
             with self.assertRaises(RuntimeError):
-                registrar_ideia_com_llm(usuario_id, titulo, descricao)
+                app.registrar_ideia(usuario_id, titulo, descricao, usar_llm=True)
 
         mock_llm.assert_called_once()
         mock_add.assert_not_called()
