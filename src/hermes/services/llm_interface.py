@@ -4,10 +4,6 @@ import logging
 from json import JSONDecodeError
 from typing import Any, Dict
 
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-
 from ..config import config
 
 logger = logging.getLogger(__name__)
@@ -47,6 +43,10 @@ def gerar_resposta(
     url = url or f"{config.OLLAMA_URL}/api/generate"
     model = model or config.OLLAMA_MODEL
     timeout = timeout or config.TIMEOUT
+
+    import requests
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
 
     session = requests.Session()
     retry = Retry(

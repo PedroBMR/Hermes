@@ -79,6 +79,26 @@ class AssistantEngineTests(unittest.TestCase):
             ],
         )
 
+    @patch("hermes.assistant.engine.coletar_contexto_ideias")
+    @patch("hermes.assistant.engine.gerar_resposta")
+    def test_responder_mensagem_sem_contexto_irrelevante(
+        self, mock_gerar_resposta, mock_coletar_contexto
+    ):
+        mock_gerar_resposta.return_value = {"ok": True, "response": "olá"}
+        state = ConversationState(user_id=123, history=[])
+
+        resposta = engine.responder_mensagem("Quem é você?", state)
+
+        self.assertEqual(resposta, "olá")
+        mock_coletar_contexto.assert_not_called()
+
+    def test_deve_usar_contexto_ideias_heuristica(self):
+        self.assertTrue(engine._deve_usar_contexto_ideias("Preciso de ideias para um projeto"))
+        self.assertTrue(
+            engine._deve_usar_contexto_ideias("Quais são minhas prioridades e planos?")
+        )
+        self.assertFalse(engine._deve_usar_contexto_ideias("Conte uma piada"))
+
 
 if __name__ == "__main__":
     unittest.main()

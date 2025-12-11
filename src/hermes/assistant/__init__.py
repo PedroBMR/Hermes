@@ -2,7 +2,6 @@
 
 from .engine import carregar_prompt_sistema, responder_mensagem, responder_sobre_ideias
 from .state import ConversationState
-from .voice import HotwordListener
 
 __all__ = [
     "carregar_prompt_sistema",
@@ -11,3 +10,11 @@ __all__ = [
     "responder_mensagem",
     "responder_sobre_ideias",
 ]
+
+
+def __getattr__(name):
+    if name == "HotwordListener":
+        from .voice import HotwordListener
+
+        return HotwordListener
+    raise AttributeError(name)

@@ -45,6 +45,25 @@ def _solicitacao_requer_mundo_externo(mensagem: str) -> bool:
     return any(termo in texto_normalizado for termo in _TERMOS_SOLICITACAO_EXTERNA)
 
 
+def _deve_usar_contexto_ideias(mensagem: str) -> bool:
+    termos_chave = {
+        "ideia",
+        "ideias",
+        "projeto",
+        "projetos",
+        "plano",
+        "planos",
+        "prioridade",
+        "prioridades",
+        "organizacao de pensamentos",
+        "organizar pensamentos",
+        "organizar ideias",
+    }
+
+    texto_normalizado = _normalizar_texto(mensagem)
+    return any(termo in texto_normalizado for termo in termos_chave)
+
+
 def _registrar_no_historico(state: ConversationState | None, mensagem: str, resposta: str) -> None:
     if state is None:
         return
@@ -138,11 +157,18 @@ def responder_mensagem(
             "Contexto: responda para o usuário identificado pelo id " f"{user_id}."
         )
 
-        contexto_ideias = coletar_contexto_ideias(user_id, mensagem)
-        if contexto_ideias.get("contexto"):
-            partes_prompt.append(contexto_ideias["contexto"])
+        if _deve_usar_contexto_ideias(mensagem):
+            logger.info("Incluindo contexto de ideias para o usuário %s", user_id)
+            contexto_ideias = coletar_contexto_ideias(user_id, mensagem)
+            if contexto_ideias.get("contexto"):
+                partes_prompt.append(contexto_ideias["contexto"])
+            else:
+                logger.debug("Sem contexto de ideias para incluir no prompt")
         else:
-            logger.debug("Sem contexto de ideias para incluir no prompt")
+            logger.info(
+                "Contexto de ideias não incluído para o usuário %s (mensagem não pertinente)",
+                user_id,
+            )
 
     historico = state.history if state else None
     if historico:

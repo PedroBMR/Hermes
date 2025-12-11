@@ -13,10 +13,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable, List, Protocol, Tuple
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-
 from .db import search_ideas
+
+
+def _criar_vectorizer():
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
+    return TfidfVectorizer()
 
 
 class VectorIndex(Protocol):
@@ -50,7 +53,7 @@ class TfidfVectorIndex:
     :func:`semantic_search`.
     """
 
-    vectorizer: TfidfVectorizer = field(default_factory=TfidfVectorizer)
+    vectorizer: any = field(default_factory=_criar_vectorizer)
     matrix: any | None = None
     ids: List[int] = field(default_factory=list)
 
@@ -61,6 +64,8 @@ class TfidfVectorIndex:
     def search(self, query: str, limit: int = 10) -> List[Tuple[int, float]]:
         if not query or self.matrix is None:
             return []
+
+        from sklearn.metrics.pairwise import cosine_similarity
 
         query_vec = self.vectorizer.transform([query])
         scores = cosine_similarity(query_vec, self.matrix).ravel()
