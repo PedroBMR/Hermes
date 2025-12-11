@@ -14,6 +14,8 @@ from ..services.db import (
     list_ideas,
     list_reminders,
     list_users,
+    search_ideas,
+    update_idea,
 )
 from ..services.llm_interface import LLMError, gerar_resposta
 from .registro_ideias import analisar_ideia_com_llm
@@ -82,10 +84,50 @@ def listar_ideias(user_id: int) -> list[dict]:
     return list_ideas(user_id)
 
 
+def buscar_ideias(
+    user_id: int | None,
+    *,
+    texto: str | None = None,
+    topico: str | None = None,
+    tag: str | None = None,
+) -> list[dict]:
+    """Realiza buscas textuais por ideias."""
+
+    if user_id is None:
+        resultados: list[dict] = []
+        for usuario in list_users():
+            resultados.extend(
+                search_ideas(usuario["id"], texto, topico=topico, tag=tag)
+            )
+        return sorted(resultados, key=lambda i: i["created_at"], reverse=True)
+
+    return search_ideas(user_id, texto, topic=topico, tag=tag)
+
+
 def buscar_ideias_semanticas(user_id: int, termo: str, limite: int = 10) -> list[dict]:
     """Busca ideias semânticas para o usuário informado."""
 
     return semantic_search.semantic_search(termo, user_id=user_id, limit=limite)
+
+
+def processar_ideia(
+    ideia_id: int,
+    titulo: str,
+    descricao: str,
+    *,
+    url: str | None = None,
+    model: str | None = None,
+) -> dict[str, Any]:
+    """Processa uma ideia existente com o LLM e atualiza seus dados."""
+
+    dados = analisar_ideia_com_llm(titulo, descricao, url=url, model=model)
+    update_idea(
+        ideia_id,
+        llm_summary=dados["llm_summary"],
+        llm_topic=dados["llm_topic"],
+        tags=dados["tags"],
+    )
+    return dados
 
 
 def criar_lembrete(user_id: int, mensagem: str, quando: str) -> int:
@@ -121,7 +163,9 @@ __all__ = [
     "criar_usuario",
     "registrar_ideia",
     "listar_ideias",
+    "buscar_ideias",
     "buscar_ideias_semanticas",
+    "processar_ideia",
     "criar_lembrete",
     "listar_lembretes",
     "responder_prompt",

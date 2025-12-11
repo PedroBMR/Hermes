@@ -23,8 +23,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from ..core.registro_ideias import analisar_ideia_com_llm, registrar_ideia_com_llm
-from ..services.db import add_idea, add_user, list_ideas, list_users, search_ideas, update_idea
+from ..core import app
 from ..services.reminders import start_scheduler
 
 LLM_FRIENDLY_MESSAGE = (
@@ -124,7 +123,7 @@ class HermesGUI(QWidget):
         self.user_combo.clear()
         self.search_user_combo.clear()
         self.search_user_combo.addItem("Todos", None)
-        usuarios = list_users()
+        usuarios = app.listar_usuarios()
         for usuario in usuarios:
             display = f"{usuario['name']} ({usuario['kind']})"
             self.user_combo.addItem(display, usuario["id"])
@@ -148,12 +147,12 @@ class HermesGUI(QWidget):
 
         ideia_salva = False
         try:
-            sugestoes = registrar_ideia_com_llm(usuario_id, titulo, descricao)
-            QMessageBox.information(
-                self,
-                "Sucesso",
-                f"Ideia salva com sucesso.\n\nSugestões do modelo:\n{sugestoes}",
-            )
+            resultado = app.registrar_ideia(usuario_id, titulo, descricao, usar_llm=True)
+            llm_resposta = resultado.get("llm_response", "")
+            mensagem_sucesso = "Ideia salva com sucesso."
+            if llm_resposta:
+                mensagem_sucesso += f"\n\nSugestões do modelo:\n{llm_resposta}"
+            QMessageBox.information(self, "Sucesso", mensagem_sucesso)
             ideia_salva = True
         except RuntimeError as e:
             mensagem = str(e) or LLM_FRIENDLY_MESSAGE
@@ -164,7 +163,7 @@ class HermesGUI(QWidget):
                 QMessageBox.Yes | QMessageBox.No,
             )
             if opcao == QMessageBox.Yes:
-                add_idea(usuario_id, titulo, descricao)
+                app.registrar_ideia(usuario_id, titulo, descricao, usar_llm=False)
                 QMessageBox.information(self, "Sucesso", "Ideia salva sem sugestões.")
                 ideia_salva = True
             else:
@@ -199,7 +198,7 @@ class HermesGUI(QWidget):
         user_id = self.search_user_combo.currentData()
         texto = self.search_input.text().strip() or None
         self.search_button.setEnabled(False)
-        future = QtConcurrent.run(search_ideas, user_id, texto)
+        future = QtConcurrent.run(app.buscar_ideias, user_id, texto=texto)
         self.search_watcher.setFuture(future)
 
     def _exibir_resultados_busca(self):
@@ -223,7 +222,7 @@ class HermesGUI(QWidget):
         self.idea_list.clear()
         if not usuario_id:
             return
-        ideias = list_ideas(usuario_id)
+        ideias = app.listar_ideias(usuario_id)
         for ideia in ideias:
             item = QListWidgetItem(f"{ideia['created_at'][:10]} - {ideia['title']}")
             item.setData(1000, ideia)  # Armazena a ideia completa
@@ -279,14 +278,12 @@ class HermesGUI(QWidget):
         item = selecionados[0]
         ideia = item.data(1000)
         try:
-            sugestoes = analisar_ideia_com_llm(ideia["title"], ideia["body"])
-            update_idea(
-                ideia["id"],
-                llm_summary=sugestoes["llm_summary"],
-                llm_topic=sugestoes["llm_topic"],
+            sugestoes = app.processar_ideia(
+                ideia["id"], ideia["title"], ideia["body"]
             )
-            ideia["llm_summary"] = sugestoes["llm_summary"]
-            ideia["llm_topic"] = sugestoes["llm_topic"]
+            ideia["llm_summary"] = sugestoes.get("llm_summary")
+            ideia["llm_topic"] = sugestoes.get("llm_topic")
+            ideia["tags"] = sugestoes.get("tags")
             item.setData(1000, ideia)
         except RuntimeError as e:  # pragma: no cover - interface gráfica
             QMessageBox.warning(self, "Erro", str(e) or LLM_FRIENDLY_MESSAGE)
@@ -300,7 +297,7 @@ class HermesGUI(QWidget):
         tipo, ok = QInputDialog.getText(self, "Novo Usuário", "Tipo do usuário:")
         if not ok or not tipo.strip():
             return
-        user_id = add_user(nome.strip(), tipo.strip())
+        user_id = app.criar_usuario(nome.strip(), tipo.strip())
         self.carregar_usuarios()
         idx = self.user_combo.findData(user_id)
         if idx != -1:
@@ -310,10 +307,10 @@ class HermesGUI(QWidget):
 def main() -> None:
     """Inicia a interface gráfica do Hermes."""
     start_scheduler()
-    app = QApplication(sys.argv)
+    qt_app = QApplication(sys.argv)
     gui = HermesGUI()
     gui.show()
-    sys.exit(app.exec_())
+    sys.exit(qt_app.exec_())
 
 
 if __name__ == "__main__":
