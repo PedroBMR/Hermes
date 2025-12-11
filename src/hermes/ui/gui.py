@@ -23,8 +23,9 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
+from ..config import load_from_args
 from ..core import app
-from ..services.reminders import start_scheduler
+from ..logging import setup_logging
 
 LLM_FRIENDLY_MESSAGE = (
     "Não consegui falar com o modelo de linguagem. Verifique se o servidor está"
@@ -304,9 +305,13 @@ class HermesGUI(QWidget):
             self.user_combo.setCurrentIndex(idx)
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     """Inicia a interface gráfica do Hermes."""
-    start_scheduler()
+
+    setup_logging()
+    load_from_args(argv)
+    app.inicializar()
+
     qt_app = QApplication(sys.argv)
     gui = HermesGUI()
     gui.show()
