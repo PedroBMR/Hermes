@@ -6,7 +6,7 @@ import sys
 import pyttsx3
 import sounddevice as sd
 import vosk
-from PyQt5.QtCore import QFutureWatcher, QtConcurrent, QThread, pyqtSignal
+from PyQt5.QtCore import QFutureWatcher, QTimer, QtConcurrent, QThread, pyqtSignal
 from PyQt5.QtWidgets import (
     QApplication,
     QComboBox,
@@ -171,19 +171,35 @@ class HermesGUI(QWidget):
             "Para desligar, basta desmarcar esta opção."
         )
         self.continuous_listen_checkbox.toggled.connect(self._alternar_escuta_continua)
+        self.hotword_sound_checkbox = QCheckBox("🔔 Aviso sonoro na hotword")
+        self.hotword_sound_checkbox.setChecked(True)
         self.listener_status = QLabel("Hotword: inativa")
+        self.hotword_indicator = QLabel("")
+        self.hotword_indicator.setStyleSheet("color: #2e7d32; font-weight: bold;")
         self.listener_thread: HotwordListenerThread | None = None
+        self._hotword_feedback_timer = QTimer(self)
+        self._hotword_feedback_timer.setSingleShot(True)
+        self._hotword_feedback_timer.timeout.connect(self._restore_listen_visuals)
 
         assistant_input_layout = QHBoxLayout()
         assistant_input_layout.addWidget(self.assistant_input)
         assistant_input_layout.addWidget(self.assistant_send)
         assistant_input_layout.addWidget(self.assistant_mic)
 
+        listener_controls_layout = QHBoxLayout()
+        listener_controls_layout.addWidget(self.continuous_listen_checkbox)
+        listener_controls_layout.addWidget(self.hotword_sound_checkbox)
+
+        listener_status_layout = QHBoxLayout()
+        listener_status_layout.addWidget(self.listener_status)
+        listener_status_layout.addWidget(self.hotword_indicator)
+        listener_status_layout.addStretch()
+
         assistant_layout = QVBoxLayout()
         assistant_layout.addWidget(self.assistant_history)
         assistant_layout.addWidget(self.assistant_tts_checkbox)
-        assistant_layout.addWidget(self.continuous_listen_checkbox)
-        assistant_layout.addWidget(self.listener_status)
+        assistant_layout.addLayout(listener_controls_layout)
+        assistant_layout.addLayout(listener_status_layout)
         assistant_layout.addLayout(assistant_input_layout)
         self.assistant_tab = QWidget()
         self.assistant_tab.setLayout(assistant_layout)
@@ -490,10 +506,8 @@ class HermesGUI(QWidget):
             self.listener_thread.hotword_error.connect(self._on_hotword_error)
             logger.info("Ativando escuta contínua do Hermes")
             self.listener_thread.start()
-            self.listener_status.setText("🟢 Hotword: aguardando...")
             self.assistant_history.append("[Hermes] Escuta contínua ativada.")
-            self.listener_status.setStyleSheet("color: green;")
-            self.assistant_tab.setStyleSheet("border: 2px solid #4caf50;")
+            self._restore_listen_visuals()
             self._atualizar_estado_mic_continuo(True)
         else:
             if self.listener_thread:
@@ -505,18 +519,25 @@ class HermesGUI(QWidget):
             self.assistant_history.append("[Hermes] Escuta contínua desativada.")
             self.listener_status.setStyleSheet("")
             self.assistant_tab.setStyleSheet("")
+            self.hotword_indicator.clear()
+            self._hotword_feedback_timer.stop()
             self._atualizar_estado_mic_continuo(False)
 
     def _on_hotword_detected(self, texto: str) -> None:
         self.listener_status.setText("🟢 Hotword: detectada!")
         self.assistant_history.append(f"[Hermes] Hotword detectada: {texto}")
         self.listener_status.setStyleSheet("color: green;")
-        self.assistant_tab.setStyleSheet("background-color: #e6ffe6;")
+        if self.hotword_sound_checkbox.isChecked():
+            QApplication.beep()
+        self._hotword_feedback_timer.stop()
+        self.assistant_tab.setStyleSheet(
+            "border: 2px solid #4caf50; background-color: #e6ffe6;"
+        )
+        self.hotword_indicator.setText("👂 Ouvindo...")
+        self._hotword_feedback_timer.start(1500)
 
     def _on_command_detected(self, texto: str) -> None:
-        self.listener_status.setText("🟢 Hotword: aguardando...")
-        self.listener_status.setStyleSheet("color: green;")
-        self.assistant_tab.setStyleSheet("border: 2px solid #4caf50;")
+        self._restore_listen_visuals()
         self.assistant_history.append(f"[Hermes] Comando capturado: {texto}")
         self._processar_mensagem_assistente(texto, origem_voz=True)
 
@@ -538,7 +559,19 @@ class HermesGUI(QWidget):
         self.listener_status.setText("Hotword: inativa")
         self.listener_status.setStyleSheet("color: red;")
         self.assistant_tab.setStyleSheet("")
+        self.hotword_indicator.clear()
+        self._hotword_feedback_timer.stop()
         self._atualizar_estado_mic_continuo(False)
+
+    def _restore_listen_visuals(self) -> None:
+        if self.listener_thread:
+            self.listener_status.setText("🟢 Hotword: aguardando...")
+            self.listener_status.setStyleSheet("color: green;")
+            self.assistant_tab.setStyleSheet("border: 2px solid #4caf50;")
+        else:
+            self.listener_status.setStyleSheet("")
+            self.assistant_tab.setStyleSheet("")
+        self.hotword_indicator.clear()
 
 
 def main(argv: list[str] | None = None) -> None:
