@@ -11,6 +11,8 @@ from typing import Optional
 import sounddevice as sd
 import vosk
 
+from ..services.stt import get_vosk_model
+
 logger = logging.getLogger(__name__)
 
 
@@ -36,6 +38,7 @@ class HotwordListener:
         samplerate: int = 16000,
         block_duration: float = 0.5,
         device: Optional[int | str] = None,
+        model: vosk.Model | None = None,
     ) -> None:
         """Cria um listener que detecta a hotword configurada.
 
@@ -46,6 +49,8 @@ class HotwordListener:
             samplerate: Taxa de amostragem do áudio capturado.
             block_duration: Duração (em segundos) de cada bloco de captura.
             device: Dispositivo de áudio a ser usado pelo ``sounddevice``.
+            model: Instância pré-carregada de ``vosk.Model``. Se fornecida,
+                será reutilizada.
         """
 
         self.hotword = _normalizar_texto(hotword or "")
@@ -56,9 +61,13 @@ class HotwordListener:
         self._thread: threading.Thread | None = None
         self._state = self.STATE_IDLE
 
-        logger.info("Carregando modelo Vosk para hotword '%s'", self.hotword)
-        self._model = vosk.Model(model_path) if model_path else vosk.Model(lang="pt-br")
-        self._recognizer = vosk.KaldiRecognizer(self._model, samplerate)
+        try:
+            logger.info("Obtendo modelo Vosk para hotword '%s'", self.hotword)
+            self._model = model or get_vosk_model(model_path)
+            self._recognizer = vosk.KaldiRecognizer(self._model, samplerate)
+        except Exception:
+            logger.exception("Falha ao preparar reconhecimento de hotword")
+            raise
 
     def start(self) -> None:
         """Inicia a captura de áudio e o loop de detecção da hotword."""
