@@ -31,6 +31,7 @@ from ..assistant.state import ConversationState
 from ..config import load_from_args
 from ..core import app
 from ..logging import setup_logging
+from ..services.stt import get_vosk_model
 
 LLM_FRIENDLY_MESSAGE = (
     "Não consegui falar com o modelo de linguagem. Verifique se o servidor está"
@@ -218,8 +219,11 @@ class HermesGUI(QWidget):
         self.user_combo.currentIndexChanged.connect(self.listar_ideias)
         self.user_combo.currentIndexChanged.connect(self._atualizar_assistente_para_usuario)
 
-        # Modelo de reconhecimento de fala Vosk
-        self.vosk_model = vosk.Model(lang="pt-br")
+        try:
+            self.vosk_model = get_vosk_model()
+        except Exception:
+            logger.exception("Falha ao carregar modelo Vosk para captura de fala")
+            raise
 
     def carregar_usuarios(self):
         self.user_combo.clear()
