@@ -68,6 +68,7 @@ class HotwordListenerThread(QThread):
                     self._outer.command_detected.emit(texto)
 
                 def on_error(self, exc: Exception) -> None:
+                    logger.error("Erro no HotwordListener", exc_info=exc)
                     self._outer.hotword_error.emit(str(exc))
 
             self._listener = _QtHotwordListener(self)
@@ -545,10 +546,12 @@ class HermesGUI(QWidget):
         logger.error("Erro na escuta contínua: %s", mensagem)
         QMessageBox.warning(
             self,
-            "Microfone indisponível",
-            "Não foi possível iniciar a escuta contínua.\n"
-            "Verifique o microfone e tente novamente.\n"
-            f"Detalhes: {mensagem}",
+            "Escuta contínua desativada",
+            (
+                "Não foi possível acessar o microfone ou a hotword.\n"
+                "Verifique as permissões de áudio, dispositivo e modelo de hotword.\n"
+                f"Detalhe técnico: {mensagem}"
+            ),
         )
         self.continuous_listen_checkbox.blockSignals(True)
         self.continuous_listen_checkbox.setChecked(False)
@@ -556,7 +559,10 @@ class HermesGUI(QWidget):
         if self.listener_thread:
             self.listener_thread.wait()
             self.listener_thread = None
-        self.listener_status.setText("Hotword: inativa")
+        self.assistant_history.append(
+            "[Hermes] Escuta contínua desativada por erro de microfone/hotword."
+        )
+        self.listener_status.setText("Hotword: erro")
         self.listener_status.setStyleSheet("color: red;")
         self.assistant_tab.setStyleSheet("")
         self.hotword_indicator.clear()
