@@ -7,8 +7,11 @@ from typing import Iterable
 
 from ..core.prompts import carregar_prompt_sistema as _carregar_prompt_sistema
 from ..services.llm_interface import LLMError, gerar_resposta
+from .state import ConversationState
 
 logger = logging.getLogger(__name__)
+
+_MAX_HISTORICO = 10
 
 
 def carregar_prompt_sistema() -> str:
@@ -35,8 +38,7 @@ def _formatar_historico(historico: Iterable[dict]) -> str:
 
 def responder_mensagem(
     mensagem: str,
-    user_id: int | None,
-    historico: list[dict] | None = None,
+    state: ConversationState | None = None,
 ) -> str:
     """Recebe uma mensagem do usuário e retorna a resposta textual do Hermes."""
 
@@ -46,11 +48,13 @@ def responder_mensagem(
     if system_prompt:
         partes_prompt.append(system_prompt.strip())
 
+    user_id = state.user_id if state else None
     if user_id is not None:
         partes_prompt.append(
             "Contexto: responda para o usuário identificado pelo id " f"{user_id}."
         )
 
+    historico = state.history if state else None
     if historico:
         historico_formatado = _formatar_historico(historico)
         if historico_formatado:
@@ -88,4 +92,12 @@ def responder_mensagem(
         logger.warning("Resposta vazia recebida do LLM")
         return "Não recebi nenhuma resposta do modelo agora, pode tentar de novo?"
 
-    return resposta.strip()
+    resposta_limpa = resposta.strip()
+
+    if state is not None:
+        state.history.append({"role": "user", "content": mensagem})
+        state.history.append({"role": "assistant", "content": resposta_limpa})
+        if len(state.history) > _MAX_HISTORICO:
+            state.history[:] = state.history[-_MAX_HISTORICO :]
+
+    return resposta_limpa
