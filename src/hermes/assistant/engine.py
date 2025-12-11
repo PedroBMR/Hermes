@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import unicodedata
 from typing import Iterable
 
 from ..core import app
@@ -13,6 +14,45 @@ from .state import ConversationState
 logger = logging.getLogger(__name__)
 
 _MAX_HISTORICO = 10
+_TERMOS_SOLICITACAO_EXTERNA = {
+    "tempo la fora",
+    "como está o tempo",
+    "previsao do tempo",
+    "previsão do tempo",
+    "clima hoje",
+    "noticias de hoje",
+    "notícias de hoje",
+    "quais as noticias",
+    "quais as notícias",
+}
+_RESPOSTA_OFFLINE_PADRAO = (
+    "Não tenho acesso ao mundo externo ou à internet. "
+    "Posso, porém, te ajudar a planejar o dia com base nas suas ideias e tarefas."
+)
+
+
+def _normalizar_texto(texto: str) -> str:
+    return (
+        unicodedata.normalize("NFKD", texto)
+        .encode("ASCII", "ignore")
+        .decode("ASCII")
+        .lower()
+    )
+
+
+def _solicitacao_requer_mundo_externo(mensagem: str) -> bool:
+    texto_normalizado = _normalizar_texto(mensagem)
+    return any(termo in texto_normalizado for termo in _TERMOS_SOLICITACAO_EXTERNA)
+
+
+def _registrar_no_historico(state: ConversationState | None, mensagem: str, resposta: str) -> None:
+    if state is None:
+        return
+
+    state.history.append({"role": "user", "content": mensagem})
+    state.history.append({"role": "assistant", "content": resposta})
+    if len(state.history) > _MAX_HISTORICO:
+        state.history[:] = state.history[-_MAX_HISTORICO :]
 
 
 def carregar_prompt_sistema() -> str:
@@ -82,6 +122,10 @@ def responder_mensagem(
 ) -> str:
     """Recebe uma mensagem do usuário e retorna a resposta textual do Hermes."""
 
+    if _solicitacao_requer_mundo_externo(mensagem):
+        _registrar_no_historico(state, mensagem, _RESPOSTA_OFFLINE_PADRAO)
+        return _RESPOSTA_OFFLINE_PADRAO
+
     system_prompt = carregar_prompt_sistema()
     partes_prompt: list[str] = []
 
@@ -140,11 +184,7 @@ def responder_mensagem(
 
     resposta_limpa = resposta.strip()
 
-    if state is not None:
-        state.history.append({"role": "user", "content": mensagem})
-        state.history.append({"role": "assistant", "content": resposta_limpa})
-        if len(state.history) > _MAX_HISTORICO:
-            state.history[:] = state.history[-_MAX_HISTORICO :]
+    _registrar_no_historico(state, mensagem, resposta_limpa)
 
     return resposta_limpa
 
@@ -218,10 +258,6 @@ def responder_sobre_ideias(
 
     resposta_limpa = resposta.strip()
 
-    if state is not None:
-        state.history.append({"role": "user", "content": pergunta})
-        state.history.append({"role": "assistant", "content": resposta_limpa})
-        if len(state.history) > _MAX_HISTORICO:
-            state.history[:] = state.history[-_MAX_HISTORICO :]
+    _registrar_no_historico(state, pergunta, resposta_limpa)
 
     return resposta_limpa

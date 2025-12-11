@@ -108,6 +108,29 @@ def test_responder_mensagem_limits_history(monkeypatch):
     assert conteudos[-2:] == ["nova pergunta", "nova"]
 
 
+def test_responder_mensagem_trata_solicitacoes_externas(monkeypatch):
+    chamado_llm = False
+
+    def fake_responder(prompt: str):
+        nonlocal chamado_llm
+        chamado_llm = True
+        return {"ok": True, "response": "resposta qualquer"}
+
+    monkeypatch.setattr(engine, "gerar_resposta", fake_responder, raising=False)
+
+    state = ConversationState(user_id=99, history=[])
+
+    pergunta = "Hermes, como está o tempo lá fora?"
+    resposta = engine.responder_mensagem(pergunta, state=state)
+
+    assert resposta == engine._RESPOSTA_OFFLINE_PADRAO
+    assert chamado_llm is False
+    assert state.history[-2:] == [
+        {"role": "user", "content": pergunta},
+        {"role": "assistant", "content": engine._RESPOSTA_OFFLINE_PADRAO},
+    ]
+
+
 def test_responder_sobre_ideias_builds_consultor_prompt(monkeypatch):
     captured_prompt: dict[str, str] = {}
 
