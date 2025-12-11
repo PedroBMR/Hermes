@@ -5,7 +5,7 @@ import sys
 import pyttsx3
 import sounddevice as sd
 import vosk
-from PyQt5.QtCore import QFutureWatcher, QtConcurrent
+from PyQt5.QtCore import QFutureWatcher, QtConcurrent, QThread, pyqtSignal
 from PyQt5.QtWidgets import (
     QApplication,
     QComboBox,
@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from ..assistant import engine
+from ..assistant import HotwordListener, engine
 from ..assistant.state import ConversationState
 from ..config import load_from_args
 from ..core import app
@@ -35,6 +35,39 @@ LLM_FRIENDLY_MESSAGE = (
     "Não consegui falar com o modelo de linguagem. Verifique se o servidor está"
     " rodando em localhost:11434 e tente novamente."
 )
+
+
+class HotwordListenerThread(QThread):
+    """Thread que encapsula o ``HotwordListener`` e expõe sinais Qt."""
+
+    hotword_detected = pyqtSignal(str)
+    command_detected = pyqtSignal(str)
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._listener: HotwordListener | None = None
+        self._stop_requested = False
+
+    def run(self) -> None:  # pragma: no cover - integrações com áudio/threads
+        class _QtHotwordListener(HotwordListener):
+            def __init__(self, outer: HotwordListenerThread) -> None:
+                super().__init__()
+                self._outer = outer
+
+            def on_hotword_detected(self, texto: str) -> None:
+                self._outer.hotword_detected.emit(texto)
+
+            def on_command(self, texto: str) -> None:
+                self._outer.command_detected.emit(texto)
+
+        self._listener = _QtHotwordListener(self)
+        self._listener.start()
+        while not self._stop_requested:
+            self.msleep(100)
+        self._listener.stop()
+
+    def stop(self) -> None:  # pragma: no cover - integrações com áudio/threads
+        self._stop_requested = True
 
 
 class HermesGUI(QWidget):
@@ -112,6 +145,10 @@ class HermesGUI(QWidget):
         self.assistant_mic = QPushButton("🎙️")
         self.assistant_mic.clicked.connect(self.capturar_fala_assistente)
         self.assistant_tts_checkbox = QCheckBox("Falar resposta")
+        self.continuous_listen_checkbox = QCheckBox("🎙️ Escuta contínua (Hermes)")
+        self.continuous_listen_checkbox.toggled.connect(self._alternar_escuta_continua)
+        self.listener_status = QLabel("Hotword: inativa")
+        self.listener_thread: HotwordListenerThread | None = None
 
         assistant_input_layout = QHBoxLayout()
         assistant_input_layout.addWidget(self.assistant_input)
@@ -121,6 +158,8 @@ class HermesGUI(QWidget):
         assistant_layout = QVBoxLayout()
         assistant_layout.addWidget(self.assistant_history)
         assistant_layout.addWidget(self.assistant_tts_checkbox)
+        assistant_layout.addWidget(self.continuous_listen_checkbox)
+        assistant_layout.addWidget(self.listener_status)
         assistant_layout.addLayout(assistant_input_layout)
         assistant_tab = QWidget()
         assistant_tab.setLayout(assistant_layout)
@@ -401,6 +440,34 @@ class HermesGUI(QWidget):
             engine_tts = pyttsx3.init()
             engine_tts.say(resposta)
             engine_tts.runAndWait()
+
+    def _alternar_escuta_continua(self, habilitar: bool) -> None:
+        if habilitar:
+            if self.listener_thread and self.listener_thread.isRunning():
+                return
+            self.listener_thread = HotwordListenerThread(self)
+            self.listener_thread.hotword_detected.connect(self._on_hotword_detected)
+            self.listener_thread.command_detected.connect(self._on_command_detected)
+            self.listener_thread.start()
+            self.listener_status.setText("Hotword: aguardando...")
+            self.assistant_history.append("[Hermes] Escuta contínua ativada.")
+        else:
+            if self.listener_thread:
+                self.listener_thread.stop()
+                self.listener_thread.wait()
+                self.listener_thread = None
+            self.listener_status.setText("Hotword: inativa")
+            self.assistant_history.append("[Hermes] Escuta contínua desativada.")
+
+    def _on_hotword_detected(self, texto: str) -> None:
+        self.listener_status.setText("Hotword: detectada!")
+        self.assistant_history.append(f"[Hermes] Hotword detectada: {texto}")
+
+    def _on_command_detected(self, texto: str) -> None:
+        self.listener_status.setText("Hotword: aguardando...")
+        self.assistant_history.append(f"[Hermes] Comando capturado: {texto}")
+        if not self.assistant_input.text():
+            self.assistant_input.setText(texto)
 
 
 def main(argv: list[str] | None = None) -> None:
