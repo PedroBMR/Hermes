@@ -145,6 +145,8 @@ Na interface, os campos de título e descrição possuem um botão de microfone
 ("🎙️") que permite ditar texto. Ao salvar uma ideia com sucesso, o Hermes
 fornece um breve feedback em voz dizendo "ideia salva".
 
+Consulte a documentação de [modos de voz](docs/modos_de_voz.md) para entender as diferenças entre a captura pontual e a escuta contínua por hotword.
+
 ### Pesquisa semântica
 A aplicação oferece uma pesquisa de ideias baseada em similaridade
 semântica. Após instalar as dependências, importe e utilize a função
