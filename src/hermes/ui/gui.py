@@ -18,11 +18,15 @@ from PyQt5.QtWidgets import (
     QListWidgetItem,
     QMessageBox,
     QPushButton,
+    QCheckBox,
+    QTabWidget,
     QTextEdit,
     QVBoxLayout,
     QWidget,
 )
 
+from ..assistant import engine
+from ..assistant.state import ConversationState
 from ..config import load_from_args
 from ..core import app
 from ..logging import setup_logging
@@ -38,6 +42,8 @@ class HermesGUI(QWidget):
         super().__init__()
         self.setWindowTitle("Hermes - Registro de Ideias")
         self.setMinimumSize(500, 600)
+
+        self.conversation_states: dict[int, ConversationState] = {}
 
         # Widgets
         self.user_label = QLabel("Usuário:")
@@ -96,26 +102,59 @@ class HermesGUI(QWidget):
         self.idea_list.itemDoubleClicked.connect(self.exibir_ideia_completa)
         self.idea_list.itemSelectionChanged.connect(self._atualizar_botao_processar)
 
-        # Layout
+        # Aba Assistente
+        self.assistant_history = QTextEdit()
+        self.assistant_history.setReadOnly(True)
+        self.assistant_input = QLineEdit()
+        self.assistant_input.returnPressed.connect(self.enviar_mensagem_assistente)
+        self.assistant_send = QPushButton("Enviar")
+        self.assistant_send.clicked.connect(self.enviar_mensagem_assistente)
+        self.assistant_mic = QPushButton("🎙️")
+        self.assistant_mic.clicked.connect(self.capturar_fala_assistente)
+        self.assistant_tts_checkbox = QCheckBox("Falar resposta")
+
+        assistant_input_layout = QHBoxLayout()
+        assistant_input_layout.addWidget(self.assistant_input)
+        assistant_input_layout.addWidget(self.assistant_send)
+        assistant_input_layout.addWidget(self.assistant_mic)
+
+        assistant_layout = QVBoxLayout()
+        assistant_layout.addWidget(self.assistant_history)
+        assistant_layout.addWidget(self.assistant_tts_checkbox)
+        assistant_layout.addLayout(assistant_input_layout)
+        assistant_tab = QWidget()
+        assistant_tab.setLayout(assistant_layout)
+
+        # Layout principal com abas
+        ideias_layout = QVBoxLayout()
+        ideias_layout.addWidget(self.title_label)
+        ideias_layout.addLayout(title_layout)
+        ideias_layout.addWidget(self.desc_label)
+        ideias_layout.addLayout(desc_layout)
+        ideias_layout.addWidget(self.save_button)
+        ideias_layout.addWidget(self.export_button)
+        ideias_layout.addWidget(self.process_button)
+        ideias_layout.addLayout(search_layout)
+        ideias_layout.addWidget(self.idea_list_label)
+        ideias_layout.addWidget(self.idea_list)
+        ideias_tab = QWidget()
+        ideias_tab.setLayout(ideias_layout)
+
+        tab_widget = QTabWidget()
+        tab_widget.addTab(ideias_tab, "Ideias")
+        tab_widget.addTab(assistant_tab, "Assistente")
+
         layout = QVBoxLayout()
         layout.addWidget(self.user_label)
         layout.addWidget(self.user_combo)
         layout.addWidget(self.new_user_button)
-        layout.addWidget(self.title_label)
-        layout.addLayout(title_layout)
-        layout.addWidget(self.desc_label)
-        layout.addLayout(desc_layout)
-        layout.addWidget(self.save_button)
-        layout.addWidget(self.export_button)
-        layout.addWidget(self.process_button)
-        layout.addLayout(search_layout)
-        layout.addWidget(self.idea_list_label)
-        layout.addWidget(self.idea_list)
+        layout.addWidget(tab_widget)
 
         self.setLayout(layout)
 
         self.carregar_usuarios()
         self.user_combo.currentIndexChanged.connect(self.listar_ideias)
+        self.user_combo.currentIndexChanged.connect(self._atualizar_assistente_para_usuario)
 
         # Modelo de reconhecimento de fala Vosk
         self.vosk_model = vosk.Model(lang="pt-br")
@@ -134,6 +173,7 @@ class HermesGUI(QWidget):
             self.user_combo.setCurrentIndex(0)
             self.user_combo.blockSignals(False)
             self.listar_ideias()
+            self._atualizar_assistente_para_usuario()
         else:
             self.idea_list.clear()
 
@@ -192,6 +232,21 @@ class HermesGUI(QWidget):
                 self.title_input.setText(texto)
             else:
                 self.desc_input.setPlainText(texto)
+        except Exception as e:  # pragma: no cover - envolve hardware
+            QMessageBox.warning(self, "Erro", f"Falha ao capturar fala: {e}")
+
+    def capturar_fala_assistente(self) -> None:
+        """Captura a fala do usuário e preenche a entrada do chat."""
+        try:
+            duracao = 5  # segundos
+            sd.default.samplerate = 16000
+            sd.default.channels = 1
+            audio = sd.rec(int(duracao * sd.default.samplerate), dtype="int16")
+            sd.wait()
+            rec = vosk.KaldiRecognizer(self.vosk_model, sd.default.samplerate)
+            rec.AcceptWaveform(audio.tobytes())
+            texto = json.loads(rec.Result()).get("text", "")
+            self.assistant_input.setText(texto)
         except Exception as e:  # pragma: no cover - envolve hardware
             QMessageBox.warning(self, "Erro", f"Falha ao capturar fala: {e}")
 
@@ -303,6 +358,49 @@ class HermesGUI(QWidget):
         idx = self.user_combo.findData(user_id)
         if idx != -1:
             self.user_combo.setCurrentIndex(idx)
+
+    def _obter_state_atual(self) -> ConversationState | None:
+        user_id = self.user_combo.currentData()
+        if user_id is None:
+            return None
+        if user_id not in self.conversation_states:
+            self.conversation_states[user_id] = ConversationState(user_id=user_id)
+        return self.conversation_states[user_id]
+
+    def _atualizar_assistente_para_usuario(self) -> None:
+        state = self._obter_state_atual()
+        self.assistant_history.clear()
+        if not state or not state.history:
+            return
+        for entrada in state.history:
+            role = entrada.get("role", "user")
+            prefixo = "Você" if role == "user" else "Hermes"
+            conteudo = entrada.get("content", "")
+            self.assistant_history.append(f"{prefixo}: {conteudo}")
+
+    def enviar_mensagem_assistente(self) -> None:
+        mensagem = self.assistant_input.text().strip()
+        state = self._obter_state_atual()
+        if not mensagem:
+            return
+        if state is None:
+            QMessageBox.warning(
+                self,
+                "Erro",
+                "Selecione um usuário antes de conversar com o Hermes.",
+            )
+            return
+
+        self.assistant_history.append(f"Você: {mensagem}")
+        self.assistant_input.clear()
+
+        resposta = engine.responder_mensagem(mensagem, state=state)
+        self.assistant_history.append(f"Hermes: {resposta}")
+
+        if self.assistant_tts_checkbox.isChecked() and resposta:
+            engine_tts = pyttsx3.init()
+            engine_tts.say(resposta)
+            engine_tts.runAndWait()
 
 
 def main(argv: list[str] | None = None) -> None:
