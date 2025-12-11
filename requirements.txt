@@ -1,16 +1,1 @@
-PyQt5>=5.15.9
-requests
-apscheduler
-
-# API (instale para expor endpoints HTTP)
-fastapi
-uvicorn
-pydantic>=1,<3
-
-# Voz (necessário para a interface com microfone)
-pyttsx3
-sounddevice
-vosk==0.3.45  # reconhecimento de voz
-
-# Busca semântica
-scikit-learn>=1.1
+-e .[voice,api,semantic]
