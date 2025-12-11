@@ -106,3 +106,54 @@ def test_responder_mensagem_limits_history(monkeypatch):
     conteudos = [entrada["content"] for entrada in state.history]
     assert "old 0" not in conteudos and "old 1" not in conteudos
     assert conteudos[-2:] == ["nova pergunta", "nova"]
+
+
+def test_responder_sobre_ideias_builds_consultor_prompt(monkeypatch):
+    captured_prompt: dict[str, str] = {}
+
+    monkeypatch.setattr(engine, "_carregar_prompt_sistema", lambda: "PROMPT", raising=False)
+
+    captured_contexto: dict[str, str] = {}
+
+    def fake_contexto(uid: int, pergunta: str):
+        captured_contexto["uid"] = uid
+        captured_contexto["pergunta"] = pergunta
+        return {"contexto": "IDEIA CONTEXTO", "ideias": ["i1"]}
+
+    monkeypatch.setattr(engine, "coletar_contexto_ideias", fake_contexto, raising=False)
+
+    def fake_responder(prompt: str):
+        captured_prompt["prompt"] = prompt
+        return {"ok": True, "response": "Análise estruturada."}
+
+    monkeypatch.setattr(engine, "gerar_resposta", fake_responder, raising=False)
+
+    state = ConversationState(
+        user_id=7,
+        history=[
+            {"role": "user", "content": "Tenho uma ideia de app."},
+            {"role": "assistant", "content": "Conte mais detalhes."},
+        ],
+    )
+
+    pergunta = "Essa ideia de app faz sentido pra você?"
+    resposta = engine.responder_sobre_ideias(pergunta, user_id=7, state=state)
+
+    assert resposta == "Análise estruturada."
+
+    prompt = captured_prompt["prompt"]
+    assert "PROMPT" in prompt
+    assert "Contexto: responda para o usuário identificado pelo id 7." in prompt
+    assert "IDEIA CONTEXTO" in prompt
+    assert "Tarefa: atue como consultor das ideias do usuário" in prompt
+    assert "- Usuário: Tenho uma ideia de app." in prompt
+    assert "- Hermes: Conte mais detalhes." in prompt
+    assert pergunta in prompt
+
+    assert captured_contexto["uid"] == 7
+    assert captured_contexto["pergunta"] == pergunta
+
+    assert state.history[-2:] == [
+        {"role": "user", "content": pergunta},
+        {"role": "assistant", "content": "Análise estruturada."},
+    ]

@@ -147,3 +147,81 @@ def responder_mensagem(
             state.history[:] = state.history[-_MAX_HISTORICO :]
 
     return resposta_limpa
+
+
+def responder_sobre_ideias(
+    pergunta: str, user_id: int, state: ConversationState | None
+) -> str:
+    """Responde a perguntas sobre ideias, planos e prioridades do usuário."""
+
+    system_prompt = carregar_prompt_sistema()
+    partes_prompt: list[str] = []
+
+    if system_prompt:
+        partes_prompt.append(system_prompt.strip())
+
+    partes_prompt.append(
+        "Contexto: responda para o usuário identificado pelo id " f"{user_id}."
+    )
+
+    contexto_ideias = coletar_contexto_ideias(user_id, pergunta)
+    if contexto_ideias.get("contexto"):
+        partes_prompt.append(contexto_ideias["contexto"])
+    else:
+        logger.debug("Sem contexto de ideias para incluir no prompt de ideação")
+
+    historico = state.history if state else None
+    if historico:
+        historico_formatado = _formatar_historico(historico)
+        if historico_formatado:
+            partes_prompt.append(historico_formatado)
+
+    partes_prompt.append(
+        (
+            "Tarefa: atue como consultor das ideias do usuário. "
+            "Ofereça uma análise estruturada com pontos fortes e fracos, identifique riscos "
+            "ou potenciais furos e sugira próximos passos claros. Referencie ideias e discussões "
+            "anteriores sempre que possível para manter continuidade."
+        )
+    )
+    partes_prompt.append(f"Usuário: {pergunta}")
+    partes_prompt.append("Hermes:")
+
+    prompt_completo = "\n\n".join(partes_prompt).strip()
+
+    try:
+        resultado = gerar_resposta(prompt_completo)
+    except LLMError as exc:
+        logger.exception("LLM offline ou indisponível: %s", exc)
+        return (
+            "Não consegui falar com o modelo de linguagem agora. "
+            "Por favor, tente novamente em alguns instantes."
+        )
+    except Exception as exc:  # Cobertura para erros inesperados
+        logger.exception("Erro inesperado ao gerar resposta: %s", exc)
+        return (
+            "Tive um problema inesperado ao gerar a resposta. "
+            "Pode tentar de novo daqui a pouco?"
+        )
+
+    if not resultado.get("ok", True):
+        logger.error("LLM retornou erro: %s", resultado)
+        return (
+            "O modelo de linguagem não conseguiu responder agora. "
+            "Tente novamente em breve."
+        )
+
+    resposta = resultado.get("response", "")
+    if not resposta:
+        logger.warning("Resposta vazia recebida do LLM")
+        return "Não recebi nenhuma resposta do modelo agora, pode tentar de novo?"
+
+    resposta_limpa = resposta.strip()
+
+    if state is not None:
+        state.history.append({"role": "user", "content": pergunta})
+        state.history.append({"role": "assistant", "content": resposta_limpa})
+        if len(state.history) > _MAX_HISTORICO:
+            state.history[:] = state.history[-_MAX_HISTORICO :]
+
+    return resposta_limpa
