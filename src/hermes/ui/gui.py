@@ -161,8 +161,8 @@ class HermesGUI(QWidget):
         assistant_layout.addWidget(self.continuous_listen_checkbox)
         assistant_layout.addWidget(self.listener_status)
         assistant_layout.addLayout(assistant_input_layout)
-        assistant_tab = QWidget()
-        assistant_tab.setLayout(assistant_layout)
+        self.assistant_tab = QWidget()
+        self.assistant_tab.setLayout(assistant_layout)
 
         # Layout principal com abas
         ideias_layout = QVBoxLayout()
@@ -181,7 +181,7 @@ class HermesGUI(QWidget):
 
         tab_widget = QTabWidget()
         tab_widget.addTab(ideias_tab, "Ideias")
-        tab_widget.addTab(assistant_tab, "Assistente")
+        tab_widget.addTab(self.assistant_tab, "Assistente")
 
         layout = QVBoxLayout()
         layout.addWidget(self.user_label)
@@ -418,9 +418,13 @@ class HermesGUI(QWidget):
             self.assistant_history.append(f"{prefixo}: {conteudo}")
 
     def enviar_mensagem_assistente(self) -> None:
-        mensagem = self.assistant_input.text().strip()
+        mensagem = self.assistant_input.text()
+        self._processar_mensagem_assistente(mensagem)
+
+    def _processar_mensagem_assistente(self, mensagem: str, origem_voz: bool = False) -> None:
+        mensagem_limpa = mensagem.strip()
         state = self._obter_state_atual()
-        if not mensagem:
+        if not mensagem_limpa:
             return
         if state is None:
             QMessageBox.warning(
@@ -430,10 +434,12 @@ class HermesGUI(QWidget):
             )
             return
 
-        self.assistant_history.append(f"Você: {mensagem}")
-        self.assistant_input.clear()
+        prefixo = "Você (voz)" if origem_voz else "Você"
+        self.assistant_history.append(f"{prefixo}: {mensagem_limpa}")
+        if not origem_voz:
+            self.assistant_input.clear()
 
-        resposta = engine.responder_mensagem(mensagem, state=state)
+        resposta = engine.responder_mensagem(mensagem_limpa, state=state)
         self.assistant_history.append(f"Hermes: {resposta}")
 
         if self.assistant_tts_checkbox.isChecked() and resposta:
@@ -451,6 +457,8 @@ class HermesGUI(QWidget):
             self.listener_thread.start()
             self.listener_status.setText("Hotword: aguardando...")
             self.assistant_history.append("[Hermes] Escuta contínua ativada.")
+            self.listener_status.setStyleSheet("")
+            self.assistant_tab.setStyleSheet("")
         else:
             if self.listener_thread:
                 self.listener_thread.stop()
@@ -458,16 +466,21 @@ class HermesGUI(QWidget):
                 self.listener_thread = None
             self.listener_status.setText("Hotword: inativa")
             self.assistant_history.append("[Hermes] Escuta contínua desativada.")
+            self.listener_status.setStyleSheet("")
+            self.assistant_tab.setStyleSheet("")
 
     def _on_hotword_detected(self, texto: str) -> None:
         self.listener_status.setText("Hotword: detectada!")
         self.assistant_history.append(f"[Hermes] Hotword detectada: {texto}")
+        self.listener_status.setStyleSheet("color: green;")
+        self.assistant_tab.setStyleSheet("background-color: #e6ffe6;")
 
     def _on_command_detected(self, texto: str) -> None:
         self.listener_status.setText("Hotword: aguardando...")
+        self.listener_status.setStyleSheet("")
+        self.assistant_tab.setStyleSheet("")
         self.assistant_history.append(f"[Hermes] Comando capturado: {texto}")
-        if not self.assistant_input.text():
-            self.assistant_input.setText(texto)
+        self._processar_mensagem_assistente(texto, origem_voz=True)
 
 
 def main(argv: list[str] | None = None) -> None:
