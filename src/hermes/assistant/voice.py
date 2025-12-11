@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import threading
 import unicodedata
 from typing import Optional
@@ -135,8 +136,17 @@ class HotwordListener:
             return
 
         texto_normalizado = _normalizar_texto(texto)
+        tokens = self._tokenizar(texto_normalizado)
+        hotword_detectada = self._contem_hotword(tokens)
+        logger.debug(
+            "Resultado %s: texto='%s', tokens=%s, hotword_detectada=%s",
+            "final" if is_final else "parcial",
+            texto_normalizado,
+            tokens,
+            hotword_detectada,
+        )
         if self._state == self.STATE_IDLE:
-            if self.hotword in texto_normalizado:
+            if hotword_detectada:
                 logger.info("Hotword '%s' detectada no texto: %s", self.hotword, texto)
                 self._state = self.STATE_AWAITING_COMMAND
                 try:
@@ -163,3 +173,22 @@ class HotwordListener:
         """Callback chamado quando um comando é detectado após a hotword."""
 
         logger.info("Comando recebido: %s", texto)
+
+    def _tokenizar(self, texto_normalizado: str) -> list[str]:
+        return [
+            token
+            for token in re.split(r"[\s,;:.!?]+", texto_normalizado.strip())
+            if token
+        ]
+
+    def _contem_hotword(self, tokens: list[str]) -> bool:
+        if not tokens:
+            return False
+
+        if tokens[0] == self.hotword:
+            return True
+
+        if len(tokens) >= 2 and tokens[0] in {"o", "a", "oh", "ah", "oi", "ô"}:
+            return tokens[1] == self.hotword
+
+        return False
