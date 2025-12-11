@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import logging
 
-import vosk
-
 logger = logging.getLogger(__name__)
 
-_VOSK_MODEL: vosk.Model | None = None
+_VOSK_MODEL = None
 
 
 def get_vosk_model(model_path: str | None = None) -> vosk.Model:
@@ -23,6 +21,8 @@ def get_vosk_model(model_path: str | None = None) -> vosk.Model:
     """
 
     global _VOSK_MODEL
+
+    import vosk
 
     if _VOSK_MODEL is not None:
         return _VOSK_MODEL

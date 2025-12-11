@@ -7,7 +7,9 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT_PATH = Path(__file__).resolve().parents[2] / "prompts" / "assistant_system.md"
+SYSTEM_PROMPT_PATH = (
+    Path(__file__).resolve().parents[3] / "prompts" / "assistant_system.md"
+)
 
 # Cache simples em memória para evitar leitura repetida do mesmo arquivo.
 _SYSTEM_PROMPT_CACHE: str | None = None
