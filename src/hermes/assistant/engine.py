@@ -25,6 +25,23 @@ _TERMOS_SOLICITACAO_EXTERNA = {
     "quais as noticias",
     "quais as notícias",
 }
+
+_TERMOS_CONTEXTO_IDEIAS = {
+    "ideia",
+    "ideias",
+    "projeto",
+    "projetos",
+    "plano",
+    "planos",
+    "planejamento",
+    "prioridade",
+    "prioridades",
+    "priorizacao",
+    "priorização",
+    "organizacao de pensamentos",
+    "organizar pensamentos",
+    "organizar ideias",
+}
 _RESPOSTA_OFFLINE_PADRAO = (
     "Não tenho acesso ao mundo externo ou à internet. "
     "Posso, porém, te ajudar a planejar o dia com base nas suas ideias e tarefas."
@@ -46,22 +63,16 @@ def _solicitacao_requer_mundo_externo(mensagem: str) -> bool:
 
 
 def _deve_usar_contexto_ideias(mensagem: str) -> bool:
-    termos_chave = {
-        "ideia",
-        "ideias",
-        "projeto",
-        "projetos",
-        "plano",
-        "planos",
-        "prioridade",
-        "prioridades",
-        "organizacao de pensamentos",
-        "organizar pensamentos",
-        "organizar ideias",
-    }
+    """Retorna True se a mensagem provavelmente se refere a ideias/projetos/planejamento."""
 
     texto_normalizado = _normalizar_texto(mensagem)
-    return any(termo in texto_normalizado for termo in termos_chave)
+    usar_contexto = any(
+        termo in texto_normalizado for termo in _TERMOS_CONTEXTO_IDEIAS
+    )
+    logger.debug(
+        "Usando contexto de ideias? %s (mensagem='%s')", usar_contexto, mensagem
+    )
+    return usar_contexto
 
 
 def _registrar_no_historico(state: ConversationState | None, mensagem: str, resposta: str) -> None:

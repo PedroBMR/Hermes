@@ -97,7 +97,11 @@ class AssistantEngineTests(unittest.TestCase):
         self.assertTrue(
             engine._deve_usar_contexto_ideias("Quais são minhas prioridades e planos?")
         )
+        self.assertTrue(
+            engine._deve_usar_contexto_ideias("Podemos fazer um planejamento para este projeto?")
+        )
         self.assertFalse(engine._deve_usar_contexto_ideias("Conte uma piada"))
+        self.assertFalse(engine._deve_usar_contexto_ideias("Quem é você?"))
 
 
 if __name__ == "__main__":
